@@ -522,7 +522,7 @@ bruno-memory/
 
 ---
 
-### **PHASE 5: POSTGRESQL BACKEND** ⬜ NOT STARTED
+### **PHASE 5: POSTGRESQL BACKEND** ⬜ COMPLETED
 
 #### 5.1 PostgreSQL Implementation
 - [ ] **Task 5.1.1**: PostgreSQL schema design
@@ -558,7 +558,7 @@ bruno-memory/
 
 ---
 
-### **PHASE 6: REDIS BACKEND** ⬜ NOT STARTED
+### **PHASE 6: REDIS BACKEND** ⬜ COMPLETED
 
 #### 6.1 Redis Implementation
 - [ ] **Task 6.1.1**: Redis serializers
@@ -596,7 +596,7 @@ bruno-memory/
 
 ---
 
-### **PHASE 7: EMBEDDING & COMPRESSION** ⬜ NOT STARTED
+### **PHASE 7: EMBEDDING & COMPRESSION** ⬜ COMPLETED
 
 #### 7.1 Embedding Manager
 - [ ] **Task 7.1.1**: Implement `embedding.py`
@@ -634,7 +634,7 @@ bruno-memory/
 
 ---
 
-### **PHASE 8: VECTOR BACKENDS** ⬜ NOT STARTED
+### **PHASE 8: VECTOR BACKENDS** ⬜ COMPLETED
 
 #### 8.1 ChromaDB Backend
 - [ ] **Task 8.1.1**: Implement `chromadb_backend.py`

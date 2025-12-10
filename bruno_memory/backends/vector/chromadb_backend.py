@@ -14,7 +14,7 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
-from bruno_core.models import Message, MemoryEntry
+from bruno_core.models import Message, MemoryEntry, MemoryType
 from bruno_memory.base.base_backend import BaseMemoryBackend
 from bruno_memory.base.config import ChromaDBConfig
 from bruno_memory.exceptions import (
@@ -297,20 +297,22 @@ class ChromaDBBackend(BaseMemoryBackend):
         
         try:
             # Generate unique ID
-            memory_id = f"memory_{memory.timestamp.isoformat()}_{hash(memory.content)}"
+            memory_id = f"memory_{memory.created_at.isoformat()}_{hash(memory.content)}"
             
             # Prepare metadata
             meta = {
                 "type": "memory",
-                "timestamp": memory.timestamp.isoformat(),
-                "importance": memory.importance,
+                "timestamp": memory.created_at.isoformat(),
+                "memory_type": memory.memory_type.value,
+                "user_id": memory.user_id,
             }
             
-            if memory.tags:
-                meta["tags"] = ",".join(memory.tags)
-            
-            if memory.source:
-                meta["source"] = memory.source
+            if memory.metadata:
+                if memory.metadata.tags:
+                    meta["tags"] = ",".join(memory.metadata.tags)
+                meta["importance"] = memory.metadata.importance
+                if memory.metadata.source:
+                    meta["source"] = memory.metadata.source
             
             if metadata:
                 meta.update(metadata)
@@ -371,15 +373,14 @@ class ChromaDBBackend(BaseMemoryBackend):
                     
                     memory = MemoryEntry(
                         content=doc,
-                        timestamp=datetime.fromisoformat(meta['timestamp']),
-                        importance=meta.get('importance', 0.5),
-                        tags=set(meta.get('tags', '').split(',')) if meta.get('tags') else set(),
-                        source=meta.get('source')
+                        memory_type=MemoryType(meta.get('memory_type', 'fact')),
+                        user_id=meta.get('user_id', 'default'),
+                        created_at=datetime.fromisoformat(meta['timestamp'])
                     )
                     memories.append(memory)
             
-            # Sort by importance and timestamp
-            memories.sort(key=lambda m: (m.importance, m.timestamp), reverse=True)
+            # Sort by importance and created_at
+            memories.sort(key=lambda m: (m.metadata.importance, m.created_at), reverse=True)
             
             logger.debug(f"Retrieved {len(memories)} memories")
             return memories[:limit]
@@ -425,10 +426,9 @@ class ChromaDBBackend(BaseMemoryBackend):
                     
                     memory = MemoryEntry(
                         content=doc,
-                        timestamp=datetime.fromisoformat(meta['timestamp']),
-                        importance=meta.get('importance', 0.5),
-                        tags=set(meta.get('tags', '').split(',')) if meta.get('tags') else set(),
-                        source=meta.get('source')
+                        memory_type=MemoryType(meta.get('memory_type', 'fact')),
+                        user_id=meta.get('user_id', 'default'),
+                        created_at=datetime.fromisoformat(meta['timestamp'])
                     )
                     matches.append((memory, score))
             

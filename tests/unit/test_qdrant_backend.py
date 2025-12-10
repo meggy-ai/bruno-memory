@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from uuid import UUID
 
-from bruno_core.models import Message, MemoryEntry
+from bruno_core.models import Message, MemoryEntry, MemoryType
 from bruno_memory.backends.vector import QdrantBackend
 from bruno_memory.base.config import QdrantConfig
 from bruno_memory.exceptions import ConnectionError, QueryError, MemoryError
@@ -215,9 +215,8 @@ async def test_store_memory(qdrant_backend):
     """Test memory storage."""
     memory = MemoryEntry(
         content="Important fact",
-        timestamp=datetime.now(timezone.utc),
-        importance=0.9,
-        tags={"important", "fact"}
+        memory_type=MemoryType.FACT,
+        user_id="test_user"
     )
     embedding = [0.1] * 1536
     
@@ -261,7 +260,7 @@ async def test_retrieve_memories(qdrant_backend):
     memories = await qdrant_backend.retrieve_memories(min_importance=0.5)
     
     assert len(memories) == 2
-    assert all(m.importance >= 0.5 for m in memories)
+    assert all(m.metadata.importance >= 0.5 for m in memories)
 
 
 @pytest.mark.asyncio

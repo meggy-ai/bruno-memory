@@ -21,7 +21,7 @@ from qdrant_client.models import (
     Range,
 )
 
-from bruno_core.models import Message, MemoryEntry
+from bruno_core.models import Message, MemoryEntry, MemoryType
 from bruno_memory.base.base_backend import BaseMemoryBackend
 from bruno_memory.base.config import QdrantConfig
 from bruno_memory.exceptions import (
@@ -51,6 +51,7 @@ class QdrantBackend(BaseMemoryBackend):
         super().__init__(config)
         self.config: QdrantConfig = config
         self._client: Optional[AsyncQdrantClient] = None
+        self._is_connected: bool = False
         
     async def initialize(self) -> None:
         """Initialize Qdrant client and collection."""
@@ -344,15 +345,17 @@ class QdrantBackend(BaseMemoryBackend):
             payload = {
                 "type": "memory",
                 "content": memory.content,
-                "timestamp": memory.timestamp.isoformat(),
-                "importance": memory.importance,
+                "timestamp": memory.created_at.isoformat(),
+                "memory_type": memory.memory_type.value,
+                "user_id": memory.user_id,
             }
             
-            if memory.tags:
-                payload["tags"] = list(memory.tags)
-            
-            if memory.source:
-                payload["source"] = memory.source
+            if memory.metadata:
+                if memory.metadata.tags:
+                    payload["tags"] = list(memory.metadata.tags)
+                payload["importance"] = memory.metadata.importance
+                if memory.metadata.source:
+                    payload["source"] = memory.metadata.source
             
             if metadata:
                 payload.update(metadata)
@@ -424,15 +427,14 @@ class QdrantBackend(BaseMemoryBackend):
                 payload = point.payload
                 memory = MemoryEntry(
                     content=payload['content'],
-                    timestamp=datetime.fromisoformat(payload['timestamp']),
-                    importance=payload.get('importance', 0.5),
-                    tags=set(payload.get('tags', [])),
-                    source=payload.get('source')
+                    memory_type=MemoryType(payload.get('memory_type', 'fact')),
+                    user_id=payload.get('user_id', 'default'),
+                    created_at=datetime.fromisoformat(payload['timestamp'])
                 )
                 memories.append(memory)
             
-            # Sort by importance and timestamp
-            memories.sort(key=lambda m: (m.importance, m.timestamp), reverse=True)
+            # Sort by created_at
+            memories.sort(key=lambda m: m.created_at, reverse=True)
             
             logger.debug(f"Retrieved {len(memories)} memories")
             return memories
@@ -484,10 +486,9 @@ class QdrantBackend(BaseMemoryBackend):
                 payload = scored_point.payload
                 memory = MemoryEntry(
                     content=payload['content'],
-                    timestamp=datetime.fromisoformat(payload['timestamp']),
-                    importance=payload.get('importance', 0.5),
-                    tags=set(payload.get('tags', [])),
-                    source=payload.get('source')
+                    memory_type=MemoryType(payload.get('memory_type', 'fact')),
+                    user_id=payload.get('user_id', 'default'),
+                    created_at=datetime.fromisoformat(payload['timestamp'])
                 )
                 matches.append((memory, scored_point.score))
             
@@ -551,7 +552,7 @@ class QdrantBackend(BaseMemoryBackend):
     
     def _ensure_connected(self) -> None:
         """Ensure connection is established."""
-        if not self.is_connected() or not self._client:
+        if not self._is_connected or not self._client:
             raise ConnectionError("Qdrant not connected. Call initialize() first.")
     
     # MemoryInterface abstract methods (not fully implemented for vector backend)

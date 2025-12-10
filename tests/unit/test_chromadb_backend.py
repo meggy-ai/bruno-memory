@@ -6,7 +6,7 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 
-from bruno_core.models import Message, MemoryEntry
+from bruno_core.models import Message, MemoryEntry, MemoryType
 from bruno_memory.backends.vector import ChromaDBBackend
 from bruno_memory.base.config import ChromaDBConfig
 from bruno_memory.exceptions import ConnectionError, QueryError, MemoryError
@@ -146,9 +146,8 @@ async def test_store_memory(chromadb_backend):
     """Test memory storage."""
     memory = MemoryEntry(
         content="Important fact",
-        timestamp=datetime.now(timezone.utc),
-        importance=0.9,
-        tags={"important", "fact"}
+        memory_type=MemoryType.FACT,
+        user_id="test_user"
     )
     
     # Mock collection add
@@ -186,7 +185,7 @@ async def test_retrieve_memories(chromadb_backend):
     memories = await chromadb_backend.retrieve_memories(min_importance=0.5)
     
     assert len(memories) == 2
-    assert memories[0].importance >= 0.5
+    assert memories[0].metadata.importance >= 0.5
 
 
 @pytest.mark.asyncio
@@ -335,4 +334,4 @@ async def test_importance_filtering(chromadb_backend):
     
     # Should only return memories with importance >= 0.5
     assert len(memories) == 2
-    assert all(m.importance >= 0.5 for m in memories)
+    assert all(m.metadata.importance >= 0.5 for m in memories)

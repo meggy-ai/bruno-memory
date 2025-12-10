@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from bruno_core.models import Message, MessageRole, MemoryEntry, MemoryType
+from bruno_core.models import Message, MessageRole, MessageType, MemoryEntry, MemoryType
 from bruno_llm.base import BaseProvider
 
 from ..base import BaseMemoryBackend
@@ -83,7 +83,7 @@ class SummarizationStrategy(CompressionStrategy):
         summary_message = Message(
             role=MessageRole.SYSTEM,
             content=f"[Summary of previous conversation]\n{summary_text}",
-            message_type="summary",
+            message_type=MessageType.TEXT,
             timestamp=old_messages[-1].timestamp if old_messages else datetime.now(),
             metadata={
                 'compressed': True,
@@ -409,7 +409,7 @@ class MemoryCompressor:
                 # Create memory entry
                 memory = MemoryEntry(
                     content=msg.content,
-                    memory_type=MemoryType.CONVERSATION,
+                    memory_type=MemoryType.EPISODIC,
                     user_id=user_id,
                     conversation_id=conversation_id,
                     metadata={
