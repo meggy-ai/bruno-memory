@@ -1,5 +1,9 @@
 # Bruno Memory
 
+## Dependencies
+pip install git+https://github.com/meggy-ai/bruno-core.git
+pip install git+https://github.com/meggy-ai/bruno-llm.git
+
 **Memory storage and retrieval system for Bruno AI Platform**
 
 [![PyPI version](https://badge.fury.io/py/bruno-memory.svg)](https://badge.fury.io/py/bruno-memory)
