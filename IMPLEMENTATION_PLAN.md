@@ -6,9 +6,128 @@
 - bruno-core: https://github.com/meggy-ai/bruno-core
 - bruno-llm: https://github.com/meggy-ai/bruno-llm
 
-**Document Version:** 1.0  
+**Document Version:** 2.0  
 **Created:** December 10, 2025  
-**Status:** Planning Phase
+**Updated:** December 10, 2025  
+**Status:** 🚨 BLOCKED - Critical Dependency Issues
+
+---
+
+## 🚨 CRITICAL DEPENDENCY ISSUE 🚨
+
+**IMPLEMENTATION BLOCKED** - Bruno-llm missing EmbeddingInterface implementation required for bruno-memory functionality.
+
+See **COMPATIBILITY_REPORT.md** for details.
+
+**REQUIRED BEFORE PROCEEDING:** Fix bruno-llm to implement EmbeddingInterface from bruno-core.
+
+---
+
+## 🔍 MANDATORY PRE-IMPLEMENTATION CHECKLIST
+
+**⚠️ CRITICAL:** Before starting ANY phase of bruno-memory implementation, developers MUST complete this alignment verification checklist. This prevents the costly rework and delays experienced in the initial implementation attempt.
+
+### Pre-Phase Verification Protocol
+
+#### Step 1: Dependency Compatibility Verification
+- [ ] **Install latest bruno-core and bruno-llm versions**
+  ```bash
+  pip install git+https://github.com/meggy-ai/bruno-core.git
+  pip install git+https://github.com/meggy-ai/bruno-llm.git
+  ```
+
+- [ ] **Verify MemoryInterface is fully compatible**
+  ```python
+  from bruno_core.interfaces import MemoryInterface
+  # Check all 12 required methods are present and signatures match expectations
+  ```
+
+- [ ] **Verify EmbeddingInterface implementation exists in bruno-llm**
+  ```python
+  from bruno_llm import EmbeddingFactory  # Must not fail
+  provider = EmbeddingFactory.create("openai")  # Must work
+  embedding = await provider.embed_text("test")  # Must return List[float]
+  ```
+
+- [ ] **Test all required model imports work**
+  ```python
+  from bruno_core.models.context import ConversationContext, SessionContext
+  from bruno_core.models.memory import MemoryEntry, MemoryQuery
+  from bruno_core.models.message import Message
+  # All imports must succeed without errors
+  ```
+
+#### Step 2: Integration Testing
+- [ ] **Create test Message and verify it works**
+  ```python
+  from bruno_core.models.message import Message, MessageRole
+  msg = Message(role=MessageRole.USER, content="test")
+  assert hasattr(msg, 'id') and hasattr(msg, 'timestamp')
+  ```
+
+- [ ] **Test ConversationContext creation**
+  ```python
+  from bruno_core.models.context import ConversationContext, UserContext, SessionContext
+  # Verify all required fields can be provided
+  ```
+
+- [ ] **Verify embedding integration works end-to-end**
+  ```python
+  from bruno_llm import EmbeddingFactory
+  from bruno_core.models.message import Message, MessageRole
+  
+  provider = EmbeddingFactory.create("openai")
+  msg = Message(role=MessageRole.USER, content="Hello world")
+  embedding = await provider.embed_message(msg)  # Must work
+  assert isinstance(embedding, list) and len(embedding) > 0
+  ```
+
+#### Step 3: Interface Method Signature Verification
+- [ ] **Verify MemoryInterface method signatures match exactly**
+  - `store_message(message: Message, conversation_id: str) -> None`
+  - `get_context(user_id: str, session_id: Optional[str] = None) -> ConversationContext`
+  - All 12 methods must match bruno-core interface exactly
+
+- [ ] **Verify EmbeddingInterface method signatures match exactly**
+  - `embed_text(text: str) -> List[float]`
+  - `embed_texts(texts: List[str]) -> List[List[float]]`  
+  - `calculate_similarity(embedding1: List[float], embedding2: List[float]) -> float`
+  - All 9 methods must work as expected
+
+#### Step 4: Factory Pattern Verification  
+- [ ] **Verify bruno-llm factory supports embeddings**
+  ```python
+  from bruno_llm import LLMFactory, EmbeddingFactory
+  # Both factories must exist and work
+  ```
+
+- [ ] **Test provider instantiation**
+  ```python
+  embedding_provider = EmbeddingFactory.create("openai", api_key="test")
+  llm_provider = LLMFactory.create("openai", api_key="test")
+  # Both must instantiate without errors
+  ```
+
+### ✅ CHECKLIST COMPLETION REQUIREMENT
+
+**ALL ITEMS ABOVE MUST PASS BEFORE STARTING ANY IMPLEMENTATION PHASE**
+
+If ANY checklist item fails:
+1. 🛑 **STOP IMPLEMENTATION IMMEDIATELY**
+2. 📋 **Document the specific failure in compatibility report**
+3. 🔧 **Request fixes to bruno-core or bruno-llm as needed**  
+4. ⏸️ **Mark implementation as BLOCKED until fixes are complete**
+5. 🔄 **Re-run complete checklist after fixes**
+
+### Lessons from Initial Implementation Attempt
+
+The initial bruno-memory implementation failed because:
+- ❌ Dependencies were not verified before starting
+- ❌ Interface assumptions were made without validation
+- ❌ Mock objects were used instead of real dependencies
+- ❌ Integration testing was deferred until implementation phase
+
+**This checklist prevents those mistakes from recurring.**
 
 ---
 
@@ -131,7 +250,76 @@ bruno-memory/
 
 ## IMPLEMENTATION PHASES
 
-### **PHASE 1: PROJECT FOUNDATION** ✅ COMPLETED
+### **PHASE 0: DEPENDENCY ANALYSIS & ALIGNMENT** 🚨 BLOCKED
+**Status:** BLOCKED - Critical dependency issues discovered  
+**Completion Date:** December 10, 2025  
+**Block Date:** December 10, 2025
+
+#### 0.1 Dependency Analysis ✅ COMPLETED
+- [x] **Task 0.1.1**: Analyze bruno-core MemoryInterface
+  - Extracted all 12 required methods from MemoryInterface
+  - Documented method signatures and return types
+  - Verified required models: ConversationContext, SessionContext, MemoryEntry, MemoryQuery, Message
+
+- [x] **Task 0.1.2**: Analyze bruno-llm integration points  
+  - Discovered bruno-llm modules: LLMFactory, providers, base
+  - Confirmed bruno-llm has LLM providers but missing embedding support
+  - Identified bruno-llm has middleware, caching, token counting
+
+- [x] **Task 0.1.3**: Check interface compatibility
+  - **🚨 CRITICAL ISSUE FOUND**: bruno-llm missing EmbeddingInterface implementation
+  - EmbeddingInterface has 9 required methods that bruno-llm must implement
+  - Without embeddings: Cannot implement semantic search, vector backends, memory retrieval
+
+#### 0.2 Compatibility Assessment 🚨 BLOCKING
+- [x] **Task 0.2.1**: Document compatibility issues
+  - Created COMPATIBILITY_REPORT.md with detailed analysis
+  - Identified 60% of bruno-memory features depend on embeddings
+  - Listed specific methods that cannot be implemented without EmbeddingInterface
+
+- [x] **Task 0.2.2**: Update implementation plan
+  - Marked implementation as BLOCKED
+  - Added resumption instructions for after bruno-llm is fixed
+  - Documented exactly what needs to be fixed in bruno-llm
+
+**🔴 BLOCKING ISSUES:**
+1. **bruno-llm missing EmbeddingInterface implementation**
+   - Required methods: `embed_text`, `embed_texts`, `embed_message`, `calculate_similarity`, etc.
+   - Cannot implement: semantic search, vector backends (ChromaDB/Qdrant), similarity-based retrieval
+
+2. **No embedding providers in bruno-llm**
+   - Need: OpenAI embeddings, HuggingFace sentence-transformers, Ollama embeddings
+   - Cannot create embeddings for storage or comparison
+
+3. **Missing embedding factory integration**
+   - Cannot instantiate embedding providers through bruno-llm factory pattern
+
+**RESUMPTION REQUIREMENTS:**
+- ✅ bruno-llm implements all 9 EmbeddingInterface methods
+- ✅ bruno-llm adds at least one embedding provider (recommend OpenAI)
+- ✅ bruno-llm factory supports embedding provider creation
+- ✅ Integration testing between bruno-core EmbeddingInterface and bruno-llm implementation
+
+**DELIVERABLES COMPLETED:**
+- ✅ Complete MemoryInterface analysis (12 methods documented)
+- ✅ bruno-core model compatibility verified (5 models analyzed)
+- ✅ bruno-llm capability assessment (missing embeddings identified)
+- ✅ COMPATIBILITY_REPORT.md created
+- ✅ Implementation plan updated with block status
+
+**NEXT STEPS AFTER UNBLOCK:**
+1. Verify bruno-llm EmbeddingInterface implementation works
+2. Test embedding creation and similarity calculation
+3. Proceed to Phase 1: Project Foundation with full embedding support
+
+**Estimated Time:** 1 day (analysis complete, waiting for bruno-llm fixes)  
+**Block Duration:** TBD - depends on bruno-llm update timeline
+
+---
+
+### **PHASE 1: PROJECT FOUNDATION** ⏸️ PAUSED
+**Status:** READY TO START - Waiting for Phase 0 unblock  
+**Dependencies:** Requires bruno-llm EmbeddingInterface implementation
 
 #### 1.1 Project Setup & Configuration
 - [x] **Task 1.1.1**: Initialize project structure
@@ -677,25 +865,47 @@ bruno-memory/
 
 ## PROGRESS TRACKER
 
-### Overall Progress: 15.4% Complete (2/13 phases)
+### Overall Progress: 🚨 BLOCKED - Phase 0 Complete, Cannot Proceed
 
-| Phase | Name | Status | Progress | Est. Time | Start Date | End Date |
-|-------|------|--------|----------|-----------|------------|----------|
-| 1 | Project Foundation | ✅ Complete | 100% | 1-2 days | Dec 10, 2025 | Dec 10, 2025 |
-| 2 | Base Abstractions | ✅ Complete | 100% | 2-3 days | Dec 10, 2025 | Dec 10, 2025 |
-| 3 | SQLite Backend | ⬜ Not Started | 0% | 4-5 days | - | - |
-| 4 | Memory Managers | ⬜ Not Started | 0% | 5-6 days | - | - |
-| 5 | PostgreSQL Backend | ⬜ Not Started | 0% | 4-5 days | - | - |
-| 6 | Redis Backend | ⬜ Not Started | 0% | 3-4 days | - | - |
-| 7 | Embedding & Compression | ⬜ Not Started | 0% | 4-5 days | - | - |
-| 8 | Vector Backends | ⬜ Not Started | 0% | 5-6 days | - | - |
-| 9 | Utility Components | ⬜ Not Started | 0% | 5-6 days | - | - |
-| 10 | Factory & Integration | ⬜ Not Started | 0% | 4-5 days | - | - |
-| 11 | Documentation | ⬜ Not Started | 0% | 4-5 days | - | - |
-| 12 | Advanced Features | ⬜ Not Started | 0% | 5-6 days | - | - |
-| 13 | CI/CD & Release | ⬜ Not Started | 0% | 2-3 days | - | - |
+**BLOCK STATUS:** Implementation halted due to critical bruno-llm dependency issues.  
+**BLOCK DATE:** December 10, 2025  
+**RESUME CONDITION:** bruno-llm must implement EmbeddingInterface before any progress can continue.
 
-### Total Estimated Time: 48-65 days (approx. 2-3 months)
+| Phase | Name | Status | Progress | Est. Time | Start Date | End Date | Block Reason |
+|-------|------|--------|----------|-----------|------------|----------|--------------|
+| 0 | Dependency Analysis | 🚨 BLOCKED | 100% | 1 day | Dec 10, 2025 | Dec 10, 2025 | bruno-llm missing EmbeddingInterface |
+| 1 | Project Foundation | ⏸️ Waiting | 0% | 1-2 days | - | - | Depends on Phase 0 unblock |
+| 2 | Base Abstractions | ⏸️ Waiting | 0% | 2-3 days | - | - | Depends on Phase 1 |
+| 3 | SQLite Backend | ⏸️ Waiting | 0% | 4-5 days | - | - | Depends on Phase 2 |
+| 4 | Memory Managers | ⏸️ Waiting | 0% | 5-6 days | - | - | Depends on Phase 3 |
+| 5 | PostgreSQL Backend | ⏸️ Waiting | 0% | 4-5 days | - | - | Depends on Phase 4 |
+| 6 | Redis Backend | ⏸️ Waiting | 0% | 3-4 days | - | - | Depends on Phase 5 |
+| 7 | Embedding & Compression | ⏸️ Waiting | 0% | 4-5 days | - | - | **REQUIRES EMBEDDINGS** |
+| 8 | Vector Backends | ⏸️ Waiting | 0% | 5-6 days | - | - | **REQUIRES EMBEDDINGS** |
+| 9 | Utility Components | ⏸️ Waiting | 0% | 5-6 days | - | - | Depends on Phase 8 |
+| 10 | Factory & Integration | ⏸️ Waiting | 0% | 4-5 days | - | - | Depends on Phase 9 |
+| 11 | Documentation | ⏸️ Waiting | 0% | 4-5 days | - | - | Depends on Phase 10 |
+| 12 | Advanced Features | ⏸️ Waiting | 0% | 5-6 days | - | - | **REQUIRES EMBEDDINGS** |
+| 13 | CI/CD & Release | ⏸️ Waiting | 0% | 2-3 days | - | - | Depends on Phase 12 |
+
+### CRITICAL BLOCKING DEPENDENCIES:
+- **Phases 7, 8, 12**: Require EmbeddingInterface implementation
+- **All Phases**: Cannot start until bruno-llm is fixed
+
+### Total Estimated Time After Unblock: 49-67 days (approx. 2-3 months)
+
+### RESUMPTION CHECKLIST:
+- [ ] **Complete the mandatory pre-implementation checklist above** ⬆️
+- [ ] bruno-llm implements EmbeddingInterface (9 required methods)
+- [ ] bruno-llm adds embedding provider (OpenAI recommended)
+- [ ] bruno-llm factory supports embedding creation
+- [ ] Integration tests pass between bruno-core and bruno-llm
+- [ ] Verify embedding creation: `embedding = await provider.embed_text("test")`
+- [ ] Verify similarity calculation works
+- [ ] **ALL pre-phase verification steps must pass** 
+- [ ] Update this plan to remove BLOCKED status
+
+**⚠️ IMPORTANT:** Do NOT skip the pre-implementation checklist. It prevents the costly rework that occurred in the initial implementation attempt.
 
 ---
 
