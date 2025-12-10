@@ -6,14 +6,17 @@ for different storage systems.
 """
 
 from .sqlite import SQLiteMemoryBackend
+from .postgresql import PostgreSQLMemoryBackend
 
 # Import and register backends with factory
 from ..factory import register_backend
-from ..base import SQLiteConfig
+from ..base import SQLiteConfig, PostgreSQLConfig
 
-# Auto-register SQLite backend
+# Auto-register backends
 register_backend('sqlite', SQLiteMemoryBackend, SQLiteConfig)
+register_backend('postgresql', PostgreSQLMemoryBackend, PostgreSQLConfig)
 
 __all__ = [
-    'SQLiteMemoryBackend'
+    'SQLiteMemoryBackend',
+    'PostgreSQLMemoryBackend',
 ]
