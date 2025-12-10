@@ -18,7 +18,7 @@ class TestSQLiteBackend:
     async def test_store_and_retrieve_message(self, sqlite_backend, sample_message):
         """Test storing and retrieving messages."""
         # Store message
-        await sqlite_backend.store_message(sample_message, sample_message.conversation_id)
+        await sqlite_backend.store_message(sample_message)
         
         # Retrieve messages
         messages = await sqlite_backend.retrieve_messages(sample_message.conversation_id)
@@ -207,7 +207,7 @@ class TestSQLiteBackend:
     
     async def test_connection_error_handling(self, temp_db_path):
         """Test connection error handling."""
-        from bruno_memory.base.memory_config import SQLiteConfig
+        from bruno_memory.base.config import SQLiteConfig
         
         config = SQLiteConfig(database_path=temp_db_path)
         backend = SQLiteMemoryBackend(config)

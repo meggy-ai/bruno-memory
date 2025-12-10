@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
-from bruno_memory.factory import MemoryFactory
+from bruno_memory.factory import MemoryBackendFactory
 from bruno_memory.backends.sqlite import SQLiteMemoryBackend
 
 
@@ -25,7 +25,9 @@ def temp_db_path() -> Generator[str, None, None]:
 @pytest.fixture
 async def sqlite_backend(temp_db_path: str) -> Generator[SQLiteMemoryBackend, None, None]:
     """Create a SQLite backend for testing.""" 
-    backend = MemoryFactory.create_sqlite(database_path=temp_db_path)
+    from bruno_memory.base.config import SQLiteConfig
+    config = SQLiteConfig(database_path=temp_db_path)
+    backend = SQLiteMemoryBackend(config)
     
     await backend.connect()
     
@@ -37,32 +39,35 @@ async def sqlite_backend(temp_db_path: str) -> Generator[SQLiteMemoryBackend, No
 @pytest.fixture
 def sample_message():
     """Create a sample message for testing."""
-    from bruno_core.models import Message
+    from bruno_core.models import Message, MessageRole
     from datetime import datetime
+    from uuid import uuid4
     
     return Message(
-        id="test-msg-1",
-        conversation_id="test-conv-1", 
-        role="user",
+        id=str(uuid4()),
+        conversation_id=str(uuid4()), 
+        role=MessageRole.USER,
         content="Hello, world!",
         timestamp=datetime.now(),
-        user_id="test-user-1"
+        user_id=str(uuid4())
     )
 
 
 @pytest.fixture
 def sample_memory_entry():
     """Create a sample memory entry for testing."""
-    from bruno_core.models import MemoryEntry, MemoryType
+    from bruno_core.models import MemoryEntry, MemoryType, MemoryMetadata
     from datetime import datetime
+    from uuid import uuid4
     
     return MemoryEntry(
-        id="test-memory-1",
+        id=str(uuid4()),
         content="This is a test memory",
         memory_type=MemoryType.EPISODIC,
         importance=0.8,
         timestamp=datetime.now(),
-        user_id="test-user-1",
-        conversation_id="test-conv-1",
+        user_id=str(uuid4()),
+        conversation_id=str(uuid4()),
+        metadata=MemoryMetadata(),
         tags=["test", "memory"]
     )
