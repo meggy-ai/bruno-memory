@@ -108,6 +108,10 @@ class RedisConfig(MemoryConfig):
     ssl: bool = Field(default=False, description="Use SSL connection")
     ttl_default: int = Field(default=86400, description="Default TTL in seconds (24 hours)")
     key_prefix: str = Field(default="bruno:memory", description="Key prefix for all Redis keys")
+    max_connections: int = Field(default=50, description="Maximum number of connections in pool")
+    socket_timeout: Optional[float] = Field(default=5.0, description="Socket timeout in seconds")
+    socket_connect_timeout: Optional[float] = Field(default=5.0, description="Socket connect timeout in seconds")
+    retry_on_timeout: bool = Field(default=True, description="Retry commands on timeout")
     
     @field_validator('port')
     @classmethod

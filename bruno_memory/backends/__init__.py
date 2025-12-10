@@ -7,16 +7,19 @@ for different storage systems.
 
 from .sqlite import SQLiteMemoryBackend
 from .postgresql import PostgreSQLMemoryBackend
+from .redis import RedisMemoryBackend
 
 # Import and register backends with factory
 from ..factory import register_backend
-from ..base import SQLiteConfig, PostgreSQLConfig
+from ..base import SQLiteConfig, PostgreSQLConfig, RedisConfig
 
 # Auto-register backends
 register_backend('sqlite', SQLiteMemoryBackend, SQLiteConfig)
 register_backend('postgresql', PostgreSQLMemoryBackend, PostgreSQLConfig)
+register_backend('redis', RedisMemoryBackend, RedisConfig)
 
 __all__ = [
     'SQLiteMemoryBackend',
     'PostgreSQLMemoryBackend',
+    'RedisMemoryBackend',
 ]
