@@ -69,3 +69,28 @@ class AuthenticationError(MemoryError):
 class PermissionError(MemoryError):
     """Raised when insufficient permissions for operation."""
     pass
+
+
+class StorageError(MemoryError):
+    """Raised when storage operations fail."""
+    pass
+
+
+class NotFoundError(MemoryError):
+    """Raised when requested resource is not found."""
+    pass
+
+
+class DuplicateError(MemoryError):
+    """Raised when attempting to create duplicate resource."""
+    pass
+
+
+class QueryError(MemoryError):
+    """Raised when query execution fails."""
+    pass
+
+
+class IntegrationError(MemoryError):
+    """Raised when integration with external systems fails."""
+    pass

@@ -6,50 +6,53 @@ Uses Pydantic for validation and type safety with proper bruno-core alignment.
 
 from abc import ABC
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
-from pydantic import BaseModel, Field, validator
+from typing import Dict, Any, Optional, Union, Literal
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class MemoryConfig(BaseModel, ABC):
     """Base configuration class for all memory backends."""
+    
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
     
     backend_type: str = Field(..., description="Type of the backend")
     debug: bool = Field(default=False, description="Enable debug logging")
     pool_size: int = Field(default=10, description="Connection pool size") 
     timeout: int = Field(default=30, description="Operation timeout in seconds")
     retry_attempts: int = Field(default=3, description="Number of retry attempts")
-    
-    class Config:
-        extra = "forbid"  # Don't allow extra fields
-        validate_assignment = True
 
 
 class SQLiteConfig(MemoryConfig):
     """Configuration for SQLite backend."""
     
-    backend_type: str = Field(default="sqlite", const=True)
+    backend_type: Literal["sqlite"] = Field(default="sqlite", description="Backend type")
     database_path: Union[str, Path] = Field(..., description="Path to SQLite database file")
     enable_fts: bool = Field(default=True, description="Enable full-text search")
     synchronous: str = Field(default="NORMAL", description="SQLite synchronous mode")
     journal_mode: str = Field(default="WAL", description="SQLite journal mode")
     cache_size: int = Field(default=2000, description="SQLite cache size in pages")
     foreign_keys: bool = Field(default=True, description="Enable foreign key constraints")
+    connection_timeout: int = Field(default=30, description="Connection timeout in seconds")
+    max_context_messages: int = Field(default=100, description="Maximum messages to include in context")
     
-    @validator('database_path')
+    @field_validator('database_path')
+    @classmethod
     def validate_database_path(cls, v):
         path = Path(v)
         # Create parent directories if they don't exist
         path.parent.mkdir(parents=True, exist_ok=True)
         return str(path)
     
-    @validator('synchronous')
+    @field_validator('synchronous')
+    @classmethod
     def validate_synchronous(cls, v):
         valid_modes = ['OFF', 'NORMAL', 'FULL', 'EXTRA']
         if v not in valid_modes:
             raise ValueError(f"synchronous must be one of {valid_modes}")
         return v
     
-    @validator('journal_mode')
+    @field_validator('journal_mode')
+    @classmethod
     def validate_journal_mode(cls, v):
         valid_modes = ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF']
         if v not in valid_modes:
@@ -64,7 +67,7 @@ class SQLiteConfig(MemoryConfig):
 class PostgreSQLConfig(MemoryConfig):
     """Configuration for PostgreSQL backend."""
     
-    backend_type: str = Field(default="postgresql", const=True)
+    backend_type: Literal["postgresql"] = Field(default="postgresql", description="Backend type")
     host: str = Field(default="localhost", description="Database host")
     port: int = Field(default=5432, description="Database port") 
     database: str = Field(..., description="Database name")
@@ -74,13 +77,15 @@ class PostgreSQLConfig(MemoryConfig):
     pool_min_size: int = Field(default=1, description="Minimum pool size")
     pool_max_size: int = Field(default=20, description="Maximum pool size")
     
-    @validator('port')
+    @field_validator('port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator('ssl_mode')
+    @field_validator('ssl_mode')
+    @classmethod
     def validate_ssl_mode(cls, v):
         valid_modes = ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']
         if v not in valid_modes:
@@ -95,7 +100,7 @@ class PostgreSQLConfig(MemoryConfig):
 class RedisConfig(MemoryConfig):
     """Configuration for Redis backend."""
     
-    backend_type: str = Field(default="redis", const=True)
+    backend_type: Literal["redis"] = Field(default="redis", description="Backend type")
     host: str = Field(default="localhost", description="Redis host")
     port: int = Field(default=6379, description="Redis port")
     password: Optional[str] = Field(default=None, description="Redis password")
@@ -104,13 +109,15 @@ class RedisConfig(MemoryConfig):
     ttl_default: int = Field(default=86400, description="Default TTL in seconds (24 hours)")
     key_prefix: str = Field(default="bruno:memory", description="Key prefix for all Redis keys")
     
-    @validator('port')
+    @field_validator('port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator('database')
+    @field_validator('database')
+    @classmethod
     def validate_database(cls, v):
         if not 0 <= v <= 15:
             raise ValueError("Redis database must be between 0 and 15")
@@ -126,12 +133,13 @@ class RedisConfig(MemoryConfig):
 class ChromaDBConfig(MemoryConfig):
     """Configuration for ChromaDB backend."""
     
-    backend_type: str = Field(default="chromadb", const=True)
+    backend_type: Literal["chromadb"] = Field(default="chromadb", description="Backend type")
     persist_directory: Optional[str] = Field(default=None, description="Directory to persist ChromaDB data")
     collection_name: str = Field(default="bruno_memories", description="ChromaDB collection name")
     distance_function: str = Field(default="cosine", description="Distance function for similarity")
     
-    @validator('distance_function')
+    @field_validator('distance_function')
+    @classmethod
     def validate_distance_function(cls, v):
         valid_functions = ['cosine', 'euclidean', 'manhattan']
         if v not in valid_functions:
@@ -142,7 +150,7 @@ class ChromaDBConfig(MemoryConfig):
 class QdrantConfig(MemoryConfig):
     """Configuration for Qdrant backend."""
     
-    backend_type: str = Field(default="qdrant", const=True)
+    backend_type: Literal["qdrant"] = Field(default="qdrant", description="Backend type")
     host: str = Field(default="localhost", description="Qdrant host")
     port: int = Field(default=6333, description="Qdrant port")
     api_key: Optional[str] = Field(default=None, description="Qdrant API key")
@@ -150,13 +158,15 @@ class QdrantConfig(MemoryConfig):
     vector_size: int = Field(default=1536, description="Vector dimension size")
     distance_metric: str = Field(default="cosine", description="Distance metric for similarity")
     
-    @validator('port')
+    @field_validator('port')
+    @classmethod
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator('distance_metric')
+    @field_validator('distance_metric')
+    @classmethod
     def validate_distance_metric(cls, v):
         valid_metrics = ['cosine', 'euclidean', 'dot']
         if v not in valid_metrics:

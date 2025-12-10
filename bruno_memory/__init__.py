@@ -26,6 +26,9 @@ from .base import (
     QdrantConfig,
     CONFIG_CLASSES
 )
+
+# Import backends to trigger auto-registration
+from . import backends
 from .exceptions import (
     MemoryError,
     ConnectionError,
