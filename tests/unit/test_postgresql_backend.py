@@ -15,7 +15,7 @@ import asyncio
 from datetime import datetime, timedelta
 from uuid import uuid4, UUID
 
-from bruno_core.memory import (
+from bruno_core.models import (
     Message,
     MessageRole,
     MemoryEntry,
@@ -33,7 +33,7 @@ from bruno_memory.exceptions import StorageError
 POSTGRES_CONFIG = {
     'host': os.getenv('POSTGRES_HOST', 'localhost'),
     'port': int(os.getenv('POSTGRES_PORT', '5432')),
-    'user': os.getenv('POSTGRES_USER', 'postgres'),
+    'username': os.getenv('POSTGRES_USER', 'postgres'),
     'password': os.getenv('POSTGRES_PASSWORD', 'postgres'),
     'database': os.getenv('POSTGRES_DB', 'bruno_memory_test'),
 }

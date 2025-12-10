@@ -57,15 +57,16 @@ class RedisMemoryBackend(BaseMemoryBackend):
     """
     
     def __init__(self, config: RedisConfig):
-        """Initialize Redis backend.
+        \"\"\"Initialize Redis backend.
         
         Args:
             config: Redis configuration
-        """
+        \"\"\"
         super().__init__(config)
         self.config: RedisConfig = config
         self._client: Optional[Redis] = None
         self._pool: Optional[ConnectionPool] = None
+        self._initialized = False
         
     async def initialize(self) -> None:
         """Initialize Redis connection pool."""
