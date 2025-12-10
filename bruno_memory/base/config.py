@@ -1,7 +1,7 @@
 """
 Configuration models for bruno-memory backends.
 
-Uses Pydantic for validation and type safety.
+Uses Pydantic for validation and type safety with proper bruno-core alignment.
 """
 
 from abc import ABC

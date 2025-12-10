@@ -1,298 +1,352 @@
 """
-Abstract base backend implementation for memory storage.
+Abstract base backend for bruno-memory implementations.
 
-Provides common functionality and interface compliance for all backend types.
+Provides common utilities and implements the bruno-core MemoryInterface
+with proper model handling and serialization.
 """
 
 import json
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from uuid import uuid4
+from uuid import UUID
 
-from bruno_core.interfaces.memory_interface import MemoryInterface
+from bruno_core.interfaces import MemoryInterface
 from bruno_core.models import (
-    Message, 
-    MemoryEntry, 
-    MemoryQuery, 
-    SessionContext, 
-    ConversationContext, 
-    UserContext
+    Message, MemoryEntry, MemoryQuery, SessionContext, ConversationContext,
+    MessageRole, MessageType, MemoryType
 )
+from bruno_core.models.context import UserContext
+from bruno_core.models.memory import MemoryMetadata
 
-from ..base.memory_config import MemoryConfig
 from ..exceptions import ValidationError, SerializationError
+from .config import MemoryConfig
 
 
 class BaseMemoryBackend(MemoryInterface, ABC):
-    """Abstract base class for all memory backends."""
+    """Abstract base class for all memory backend implementations."""
     
     def __init__(self, config: MemoryConfig):
-        """Initialize the backend with configuration.
+        """Initialize base backend with configuration.
         
         Args:
-            config: Backend configuration
+            config: Backend configuration instance
         """
         self.config = config
         self._connected = False
     
+    # Abstract connection methods that must be implemented
     @abstractmethod
     async def connect(self) -> None:
-        """Connect to the storage backend."""
+        """Connect to the backend storage."""
         pass
     
-    @abstractmethod 
+    @abstractmethod
     async def disconnect(self) -> None:
-        """Disconnect from the storage backend."""
+        """Disconnect from the backend storage."""
         pass
     
     @abstractmethod
     async def health_check(self) -> bool:
-        """Check if the backend is healthy and accessible."""
+        """Check if the backend is healthy and responsive."""
         pass
     
-    # Utility methods for serialization/deserialization
-    
-    def serialize_message(self, message: Message) -> Dict[str, Any]:
-        """Serialize a Message object to dictionary.
-        
-        Args:
-            message: Message to serialize
-            
-        Returns:
-            Serialized message dictionary
-            
-        Raises:
-            SerializationError: If serialization fails
-        """
-        try:
-            return {
-                "id": str(message.id),
-                "conversation_id": message.conversation_id,
-                "role": message.role.value if hasattr(message.role, 'value') else str(message.role),
-                "content": message.content,
-                "timestamp": message.timestamp.isoformat() if message.timestamp else None,
-                "message_type": message.message_type.value if hasattr(message.message_type, 'value') else str(message.message_type),
-                "metadata": json.dumps(message.metadata) if message.metadata else None,
-                "user_id": message.user_id,
-                "parent_id": str(message.parent_id) if message.parent_id else None,
-                "tokens": message.tokens,
-                "model": message.model,
-                "finish_reason": message.finish_reason
-            }
-        except Exception as e:
-            raise SerializationError(f"Failed to serialize message: {e}")
-    
-    def deserialize_message(self, data: Dict[str, Any]) -> Message:
-        """Deserialize dictionary to Message object.
-        
-        Args:
-            data: Serialized message data
-            
-        Returns:
-            Message object
-            
-        Raises:
-            SerializationError: If deserialization fails
-        """
-        try:
-            # Handle metadata JSON deserialization
-            metadata = None
-            if data.get("metadata"):
-                metadata = json.loads(data["metadata"])
-            
-            # Parse timestamp
-            timestamp = None
-            if data.get("timestamp"):
-                timestamp = datetime.fromisoformat(data["timestamp"])
-            
-            return Message(
-                id=data["id"],
-                conversation_id=data["conversation_id"], 
-                role=data["role"],
-                content=data["content"],
-                timestamp=timestamp,
-                message_type=data.get("message_type"),
-                metadata=metadata,
-                user_id=data.get("user_id"),
-                parent_id=data.get("parent_id"),
-                tokens=data.get("tokens"),
-                model=data.get("model"),
-                finish_reason=data.get("finish_reason")
-            )
-        except Exception as e:
-            raise SerializationError(f"Failed to deserialize message: {e}")
-    
-    def serialize_memory_entry(self, memory: MemoryEntry) -> Dict[str, Any]:
-        """Serialize a MemoryEntry object to dictionary.
-        
-        Args:
-            memory: MemoryEntry to serialize
-            
-        Returns:
-            Serialized memory dictionary
-            
-        Raises:
-            SerializationError: If serialization fails
-        """
-        try:
-            return {
-                "id": str(memory.id),
-                "content": memory.content,
-                "memory_type": memory.memory_type.value if hasattr(memory.memory_type, 'value') else str(memory.memory_type),
-                "importance": memory.importance,
-                "timestamp": memory.timestamp.isoformat(),
-                "user_id": memory.user_id,
-                "conversation_id": memory.conversation_id,
-                "tags": json.dumps(memory.tags) if memory.tags else None,
-                "metadata": json.dumps(memory.metadata.dict()) if memory.metadata else None,
-                "embedding": json.dumps(memory.embedding) if memory.embedding else None,
-                "expires_at": memory.expires_at.isoformat() if memory.expires_at else None
-            }
-        except Exception as e:
-            raise SerializationError(f"Failed to serialize memory entry: {e}")
-    
-    def deserialize_memory_entry(self, data: Dict[str, Any]) -> MemoryEntry:
-        """Deserialize dictionary to MemoryEntry object.
-        
-        Args:
-            data: Serialized memory data
-            
-        Returns:
-            MemoryEntry object
-            
-        Raises:
-            SerializationError: If deserialization fails  
-        """
-        try:
-            # Handle JSON fields
-            tags = json.loads(data["tags"]) if data.get("tags") else []
-            metadata = json.loads(data["metadata"]) if data.get("metadata") else None
-            embedding = json.loads(data["embedding"]) if data.get("embedding") else None
-            
-            # Parse timestamps
-            timestamp = datetime.fromisoformat(data["timestamp"])
-            expires_at = None
-            if data.get("expires_at"):
-                expires_at = datetime.fromisoformat(data["expires_at"])
-            
-            return MemoryEntry(
-                id=data["id"],
-                content=data["content"],
-                memory_type=data["memory_type"],
-                importance=data["importance"],
-                timestamp=timestamp,
-                user_id=data["user_id"],
-                conversation_id=data.get("conversation_id"),
-                tags=tags,
-                metadata=metadata,
-                embedding=embedding,
-                expires_at=expires_at
-            )
-        except Exception as e:
-            raise SerializationError(f"Failed to deserialize memory entry: {e}")
-    
-    def serialize_session_context(self, session: SessionContext) -> Dict[str, Any]:
-        """Serialize a SessionContext object to dictionary.
-        
-        Args:
-            session: SessionContext to serialize
-            
-        Returns:
-            Serialized session dictionary
-            
-        Raises:
-            SerializationError: If serialization fails
-        """
-        try:
-            return {
-                "session_id": session.session_id,
-                "user_id": session.user_id,
-                "conversation_id": session.conversation_id,
-                "created_at": session.created_at.isoformat(),
-                "updated_at": session.updated_at.isoformat() if session.updated_at else None,
-                "metadata": json.dumps(session.metadata) if session.metadata else None,
-                "is_active": session.is_active
-            }
-        except Exception as e:
-            raise SerializationError(f"Failed to serialize session context: {e}")
-    
-    def deserialize_session_context(self, data: Dict[str, Any]) -> SessionContext:
-        """Deserialize dictionary to SessionContext object.
-        
-        Args:
-            data: Serialized session data
-            
-        Returns:
-            SessionContext object
-            
-        Raises:
-            SerializationError: If deserialization fails
-        """
-        try:
-            metadata = json.loads(data["metadata"]) if data.get("metadata") else None
-            created_at = datetime.fromisoformat(data["created_at"])
-            updated_at = None
-            if data.get("updated_at"):
-                updated_at = datetime.fromisoformat(data["updated_at"])
-            
-            return SessionContext(
-                session_id=data["session_id"],
-                user_id=data["user_id"],
-                conversation_id=data["conversation_id"],
-                created_at=created_at,
-                updated_at=updated_at,
-                metadata=metadata,
-                is_active=data.get("is_active", True)
-            )
-        except Exception as e:
-            raise SerializationError(f"Failed to deserialize session context: {e}")
-    
-    def generate_id(self) -> str:
-        """Generate a unique ID for messages/entries."""
-        return str(uuid4())
-    
+    # Model validation utilities
     def validate_message(self, message: Message) -> None:
-        """Validate a Message object.
+        """Validate a Message model instance.
         
         Args:
             message: Message to validate
             
         Raises:
-            ValidationError: If validation fails
+            ValidationError: If message is invalid
         """
-        if not message.id:
-            raise ValidationError("Message ID is required")
-        if not message.conversation_id:
-            raise ValidationError("Conversation ID is required")
-        if not message.content:
-            raise ValidationError("Message content is required")
-        if not message.role:
-            raise ValidationError("Message role is required")
+        if not isinstance(message, Message):
+            raise ValidationError(f"Expected Message instance, got {type(message)}")
+        
+        if not message.content or len(message.content.strip()) == 0:
+            raise ValidationError("Message content cannot be empty")
+        
+        if not isinstance(message.role, MessageRole):
+            raise ValidationError(f"Invalid message role: {message.role}")
     
-    def validate_memory_entry(self, memory: MemoryEntry) -> None:
-        """Validate a MemoryEntry object.
+    def validate_memory_entry(self, memory_entry: MemoryEntry) -> None:
+        """Validate a MemoryEntry model instance.
         
         Args:
-            memory: MemoryEntry to validate
+            memory_entry: MemoryEntry to validate
             
         Raises:
-            ValidationError: If validation fails
+            ValidationError: If memory entry is invalid
         """
-        if not memory.id:
-            raise ValidationError("Memory entry ID is required") 
-        if not memory.content:
-            raise ValidationError("Memory entry content is required")
-        if not memory.user_id:
-            raise ValidationError("Memory entry user_id is required")
-        if memory.importance is not None and not (0.0 <= memory.importance <= 1.0):
-            raise ValidationError("Memory entry importance must be between 0.0 and 1.0")
+        if not isinstance(memory_entry, MemoryEntry):
+            raise ValidationError(f"Expected MemoryEntry instance, got {type(memory_entry)}")
+        
+        if not memory_entry.content or len(memory_entry.content.strip()) == 0:
+            raise ValidationError("Memory content cannot be empty")
+        
+        if not isinstance(memory_entry.memory_type, MemoryType):
+            raise ValidationError(f"Invalid memory type: {memory_entry.memory_type}")
+        
+        if not memory_entry.user_id or len(memory_entry.user_id.strip()) == 0:
+            raise ValidationError("Memory entry user_id cannot be empty")
     
-    async def __aenter__(self):
-        """Async context manager entry."""
-        await self.connect()
-        return self
+    # Model serialization utilities for database storage
+    def serialize_message(self, message: Message) -> Dict[str, Any]:
+        """Serialize Message to database-compatible dictionary.
+        
+        Args:
+            message: Message instance to serialize
+            
+        Returns:
+            Dictionary with string keys and JSON-serializable values
+        """
+        try:
+            return {
+                'id': str(message.id),
+                'role': message.role.value,
+                'content': message.content,
+                'message_type': message.message_type.value,
+                'timestamp': message.timestamp.isoformat(),
+                'metadata': json.dumps(message.metadata) if message.metadata else None,
+                'parent_id': str(message.parent_id) if message.parent_id else None,
+                'conversation_id': message.conversation_id,
+            }
+        except Exception as e:
+            raise SerializationError(f"Failed to serialize message: {e}")
     
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit.""" 
-        await self.disconnect()
+    def deserialize_message(self, data: Dict[str, Any]) -> Message:
+        """Deserialize database data to Message instance.
+        
+        Args:
+            data: Dictionary from database
+            
+        Returns:
+            Message instance
+        """
+        try:
+            return Message(
+                id=UUID(data['id']),
+                role=MessageRole(data['role']),
+                content=data['content'],
+                message_type=MessageType(data['message_type']),
+                timestamp=datetime.fromisoformat(data['timestamp']),
+                metadata=json.loads(data['metadata']) if data['metadata'] else {},
+                parent_id=UUID(data['parent_id']) if data['parent_id'] else None,
+                conversation_id=data['conversation_id'],
+            )
+        except Exception as e:
+            raise SerializationError(f"Failed to deserialize message: {e}")
+    
+    def serialize_memory_entry(self, memory_entry: MemoryEntry) -> Dict[str, Any]:
+        """Serialize MemoryEntry to database-compatible dictionary.
+        
+        Args:
+            memory_entry: MemoryEntry instance to serialize
+            
+        Returns:
+            Dictionary with string keys and JSON-serializable values
+        """
+        try:
+            return {
+                'id': str(memory_entry.id),
+                'content': memory_entry.content,
+                'memory_type': memory_entry.memory_type.value,
+                'user_id': memory_entry.user_id,
+                'conversation_id': memory_entry.conversation_id,
+                'metadata': json.dumps(memory_entry.metadata.model_dump()),
+                'created_at': memory_entry.created_at.isoformat(),
+                'updated_at': memory_entry.updated_at.isoformat(),
+                'last_accessed': memory_entry.last_accessed.isoformat(),
+                'expires_at': memory_entry.expires_at.isoformat() if memory_entry.expires_at else None,
+            }
+        except Exception as e:
+            raise SerializationError(f"Failed to serialize memory entry: {e}")
+    
+    def deserialize_memory_entry(self, data: Dict[str, Any]) -> MemoryEntry:
+        """Deserialize database data to MemoryEntry instance.
+        
+        Args:
+            data: Dictionary from database
+            
+        Returns:
+            MemoryEntry instance
+        """
+        try:
+            metadata_dict = json.loads(data['metadata']) if data['metadata'] else {}
+            metadata = MemoryMetadata.model_validate(metadata_dict)
+            
+            return MemoryEntry(
+                id=UUID(data['id']),
+                content=data['content'],
+                memory_type=MemoryType(data['memory_type']),
+                user_id=data['user_id'],
+                conversation_id=data['conversation_id'],
+                metadata=metadata,
+                created_at=datetime.fromisoformat(data['created_at']),
+                updated_at=datetime.fromisoformat(data['updated_at']),
+                last_accessed=datetime.fromisoformat(data['last_accessed']),
+                expires_at=datetime.fromisoformat(data['expires_at']) if data['expires_at'] else None,
+            )
+        except Exception as e:
+            raise SerializationError(f"Failed to deserialize memory entry: {e}")
+    
+    def serialize_session_context(self, session: SessionContext) -> Dict[str, Any]:
+        """Serialize SessionContext to database-compatible dictionary.
+        
+        Args:
+            session: SessionContext instance to serialize
+            
+        Returns:
+            Dictionary with string keys and JSON-serializable values
+        """
+        try:
+            return {
+                'session_id': session.session_id,
+                'user_id': session.user_id,
+                'conversation_id': session.conversation_id,
+                'started_at': session.started_at.isoformat(),
+                'ended_at': session.ended_at.isoformat() if session.ended_at else None,
+                'last_activity': session.last_activity.isoformat(),
+                'is_active': session.is_active,
+                'state': json.dumps(session.state),
+                'metadata': json.dumps(session.metadata),
+            }
+        except Exception as e:
+            raise SerializationError(f"Failed to serialize session context: {e}")
+    
+    def deserialize_session_context(self, data: Dict[str, Any]) -> SessionContext:
+        """Deserialize database data to SessionContext instance.
+        
+        Args:
+            data: Dictionary from database
+            
+        Returns:
+            SessionContext instance
+        """
+        try:
+            return SessionContext(
+                session_id=data['session_id'],
+                user_id=data['user_id'],
+                conversation_id=data['conversation_id'],
+                started_at=datetime.fromisoformat(data['started_at']),
+                ended_at=datetime.fromisoformat(data['ended_at']) if data['ended_at'] else None,
+                last_activity=datetime.fromisoformat(data['last_activity']),
+                is_active=bool(data['is_active']),
+                state=json.loads(data['state']) if data['state'] else {},
+                metadata=json.loads(data['metadata']) if data['metadata'] else {},
+            )
+        except Exception as e:
+            raise SerializationError(f"Failed to deserialize session context: {e}")
+    
+    def serialize_user_context(self, user: UserContext) -> Dict[str, Any]:
+        """Serialize UserContext to database-compatible dictionary.
+        
+        Args:
+            user: UserContext instance to serialize
+            
+        Returns:
+            Dictionary with string keys and JSON-serializable values
+        """
+        try:
+            return {
+                'user_id': user.user_id,
+                'name': user.name,
+                'preferences': json.dumps(user.preferences),
+                'profile': json.dumps(user.profile),
+                'metadata': json.dumps(user.metadata),
+                'created_at': user.created_at.isoformat(),
+                'last_active': user.last_active.isoformat(),
+            }
+        except Exception as e:
+            raise SerializationError(f"Failed to serialize user context: {e}")
+    
+    def deserialize_user_context(self, data: Dict[str, Any]) -> UserContext:
+        """Deserialize database data to UserContext instance.
+        
+        Args:
+            data: Dictionary from database
+            
+        Returns:
+            UserContext instance
+        """
+        try:
+            return UserContext(
+                user_id=data['user_id'],
+                name=data['name'],
+                preferences=json.loads(data['preferences']) if data['preferences'] else {},
+                profile=json.loads(data['profile']) if data['profile'] else {},
+                metadata=json.loads(data['metadata']) if data['metadata'] else {},
+                created_at=datetime.fromisoformat(data['created_at']),
+                last_active=datetime.fromisoformat(data['last_active']),
+            )
+        except Exception as e:
+            raise SerializationError(f"Failed to deserialize user context: {e}")
+    
+    # Utility methods for common operations
+    def build_memory_query_filters(self, query: MemoryQuery) -> Dict[str, Any]:
+        """Build filter dictionary from MemoryQuery for backend-specific use.
+        
+        Args:
+            query: MemoryQuery instance
+            
+        Returns:
+            Dictionary of filters for backend implementation
+        """
+        filters = {
+            'user_id': query.user_id,
+            'query_text': query.query_text,
+            'memory_types': [mt.value for mt in query.memory_types] if query.memory_types else [],
+            'categories': query.categories,
+            'tags': query.tags,
+            'min_confidence': query.min_confidence,
+            'min_importance': query.min_importance,
+            'limit': query.limit,
+            'include_expired': query.include_expired,
+            'similarity_threshold': query.similarity_threshold,
+        }
+        return {k: v for k, v in filters.items() if v is not None and v != []}
+    
+    def create_conversation_context(
+        self,
+        user_id: str,
+        session_id: Optional[str] = None,
+        messages: Optional[List[Message]] = None,
+        conversation_id: Optional[str] = None
+    ) -> ConversationContext:
+        """Helper to create ConversationContext with proper linking.
+        
+        Args:
+            user_id: User ID
+            session_id: Optional session ID
+            messages: Optional list of messages
+            conversation_id: Optional conversation ID
+            
+        Returns:
+            ConversationContext instance
+        """
+        # Create UserContext
+        user_context = UserContext(user_id=user_id)
+        
+        # Create SessionContext
+        session_context = SessionContext(
+            user_id=user_id,
+            conversation_id=conversation_id
+        )
+        if session_id:
+            session_context.session_id = session_id
+        
+        # Create ConversationContext
+        return ConversationContext(
+            conversation_id=conversation_id or session_context.conversation_id,
+            user=user_context,
+            session=session_context,
+            messages=messages or [],
+            metadata={}
+        )
+    
+    # Connection state properties
+    @property
+    def is_connected(self) -> bool:
+        """Check if backend is connected."""
+        return self._connected

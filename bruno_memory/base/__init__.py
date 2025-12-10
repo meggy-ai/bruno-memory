@@ -1,23 +1,25 @@
-"""Base memory backend and configuration components."""
+"""
+Base classes and utilities for bruno-memory backend implementations.
+"""
 
-from .memory_config import (
+from .base_backend import BaseMemoryBackend
+from .config import (
     MemoryConfig,
     SQLiteConfig,
     PostgreSQLConfig,
     RedisConfig,
     ChromaDBConfig,
     QdrantConfig,
-    CONFIG_CLASSES,
+    CONFIG_CLASSES
 )
-from .base_backend import BaseMemoryBackend
 
 __all__ = [
-    "MemoryConfig",
-    "SQLiteConfig", 
-    "PostgreSQLConfig",
-    "RedisConfig",
-    "ChromaDBConfig",
-    "QdrantConfig",
-    "CONFIG_CLASSES",
-    "BaseMemoryBackend",
+    'BaseMemoryBackend',
+    'MemoryConfig',
+    'SQLiteConfig',
+    'PostgreSQLConfig',
+    'RedisConfig',
+    'ChromaDBConfig',
+    'QdrantConfig',
+    'CONFIG_CLASSES'
 ]

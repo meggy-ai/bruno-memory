@@ -1,41 +1,83 @@
 """
-bruno-memory: Memory storage and retrieval system for Bruno AI Platform
+bruno-memory: Advanced memory management for bruno-ai
 
-A comprehensive memory management package that implements the bruno-core MemoryInterface
-with support for multiple storage backends (SQLite, PostgreSQL, Redis, ChromaDB, Qdrant).
+A high-performance, multi-backend memory system providing persistent storage
+and intelligent retrieval for AI conversations and context management.
 """
 
+import importlib.metadata
 from typing import Optional
 
-try:
-    from importlib.metadata import version, PackageNotFoundError
-except ImportError:
-    from importlib_metadata import version, PackageNotFoundError
-
-try:
-    __version__ = version("bruno-memory")
-except PackageNotFoundError:
-    # Package is not installed, use a fallback version
-    __version__ = "0.1.0-dev"
-
-# Import main factory for easy access
-from .factory import MemoryFactory
+from .factory import (
+    MemoryBackendFactory, 
+    factory,
+    create_backend, 
+    create_config, 
+    list_backends, 
+    register_backend
+)
+from .base import (
+    BaseMemoryBackend,
+    MemoryConfig,
+    SQLiteConfig,
+    PostgreSQLConfig,
+    RedisConfig,
+    ChromaDBConfig,
+    QdrantConfig,
+    CONFIG_CLASSES
+)
 from .exceptions import (
     MemoryError,
-    BackendNotFoundError,
-    ConfigurationError,
     ConnectionError,
+    ConfigurationError,
     ValidationError,
-    OperationError,
+    NotFoundError,
+    DuplicateError,
+    PermissionError,
+    StorageError,
+    QueryError,
+    SerializationError,
+    BackendNotFoundError,
+    IntegrationError,
 )
 
+# Version handling with fallback
+try:
+    __version__ = importlib.metadata.version('bruno-memory')
+except importlib.metadata.PackageNotFoundError:
+    __version__ = '0.1.0'  # Fallback version
+
 __all__ = [
-    "__version__",
-    "MemoryFactory", 
-    "MemoryError",
-    "BackendNotFoundError", 
-    "ConfigurationError",
-    "ConnectionError",
-    "ValidationError",
-    "OperationError",
+    # Core classes
+    'BaseMemoryBackend',
+    'MemoryBackendFactory',
+    'factory',
+    # Configuration classes
+    'MemoryConfig',
+    'SQLiteConfig',
+    'PostgreSQLConfig',
+    'RedisConfig',
+    'ChromaDBConfig',
+    'QdrantConfig',
+    'CONFIG_CLASSES',
+    # Factory functions
+    'create_backend',
+    'create_config',
+    'list_backends', 
+    'register_backend',
+    # Exception classes
+    'MemoryError',
+    'ConnectionError',
+    'ConfigurationError',
+    'ValidationError',
+    'NotFoundError',
+    'DuplicateError',
+    'PermissionError',
+    'StorageError',
+    'QueryError',
+    'SerializationError',
+    'BackendNotFoundError',
+    'IntegrationError',
+    # Version
+    '__version__'
 ]

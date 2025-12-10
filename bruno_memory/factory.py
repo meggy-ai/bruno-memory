@@ -1,220 +1,261 @@
 """
-Memory backend factory for creating and managing different storage backends.
+Memory backend factory for creating and managing backend instances.
 
-Provides a centralized way to create backend instances based on configuration.
+Provides a centralized factory pattern for creating memory backends
+with proper configuration validation and type safety.
 """
 
-import os
-from typing import Dict, Type, Optional, Any, Union
-from bruno_core.interfaces.memory_interface import MemoryInterface
+from typing import Dict, Type, Any, Optional
+import inspect
 
-from .base.memory_config import MemoryConfig, CONFIG_CLASSES
-from .exceptions import BackendNotFoundError, ConfigurationError
-from .backends.sqlite import SQLiteMemoryBackend
+from .base import BaseMemoryBackend, MemoryConfig, CONFIG_CLASSES
+from .exceptions import ConfigurationError, BackendNotFoundError, ValidationError
 
 
-class MemoryFactory:
-    """Factory class for creating memory backends."""
+class MemoryBackendFactory:
+    """Factory for creating memory backend instances."""
     
-    _backends: Dict[str, Type[MemoryInterface]] = {}
+    def __init__(self):
+        """Initialize the factory with empty backend registry."""
+        self._backends: Dict[str, Type[BaseMemoryBackend]] = {}
+        self._config_types: Dict[str, Type[MemoryConfig]] = CONFIG_CLASSES.copy()
     
-    # Register built-in backends
-    @classmethod
-    def _register_builtin_backends(cls):
-        """Register built-in backend implementations."""
-        cls._backends["sqlite"] = SQLiteMemoryBackend
-    
-    @classmethod
-    def _ensure_backends_registered(cls):
-        """Ensure built-in backends are registered."""
-        if not cls._backends:
-            cls._register_builtin_backends()
-    
-    @classmethod
-    def register_backend(cls, name: str, backend_class: Type[MemoryInterface]) -> None:
-        """Register a backend implementation.
+    def register_backend(
+        self,
+        name: str,
+        backend_class: Type[BaseMemoryBackend],
+        config_class: Optional[Type[MemoryConfig]] = None
+    ) -> None:
+        """Register a memory backend implementation.
         
         Args:
             name: Backend name (e.g., 'sqlite', 'postgresql')
             backend_class: Backend implementation class
+            config_class: Optional configuration class override
+            
+        Raises:
+            ValidationError: If backend class is invalid
         """
-        cls._backends[name] = backend_class
+        if not inspect.isclass(backend_class):
+            raise ValidationError(f"Backend must be a class, got {type(backend_class)}")
+        
+        if not issubclass(backend_class, BaseMemoryBackend):
+            raise ValidationError(
+                f"Backend class must inherit from BaseMemoryBackend, "
+                f"got {backend_class.__name__}"
+            )
+        
+        self._backends[name] = backend_class
+        
+        if config_class:
+            if not issubclass(config_class, MemoryConfig):
+                raise ValidationError(
+                    f"Config class must inherit from MemoryConfig, "
+                    f"got {config_class.__name__}"
+                )
+            self._config_types[name] = config_class
     
-    @classmethod
-    def get_backend_names(cls) -> list[str]:
-        """Get list of registered backend names."""
-        cls._ensure_backends_registered()
-        return list(cls._backends.keys())
-    
-    @classmethod
-    def create_backend(
-        cls, 
-        backend_type: str, 
-        config: Optional[Union[Dict[str, Any], MemoryConfig]] = None,
-        **kwargs
-    ) -> MemoryInterface:
-        """Create a backend instance.
+    def unregister_backend(self, name: str) -> None:
+        """Unregister a memory backend implementation.
         
         Args:
-            backend_type: Type of backend to create
-            config: Configuration dict or MemoryConfig instance
-            **kwargs: Additional configuration parameters
+            name: Backend name to unregister
+        """
+        self._backends.pop(name, None)
+        self._config_types.pop(name, None)
+    
+    def list_backends(self) -> Dict[str, str]:
+        """List all registered backend implementations.
+        
+        Returns:
+            Dictionary mapping backend names to class names
+        """
+        return {name: cls.__name__ for name, cls in self._backends.items()}
+    
+    def create_config(self, backend_type: str, **kwargs) -> MemoryConfig:
+        """Create a configuration instance for the specified backend type.
+        
+        Args:
+            backend_type: Backend type name
+            **kwargs: Configuration parameters
             
         Returns:
-            MemoryInterface implementation
+            Configuration instance for the backend
+            
+        Raises:
+            BackendNotFoundError: If backend type is not registered
+            ConfigurationError: If configuration creation fails
+        """
+        if backend_type not in self._config_types:
+            available = list(self._config_types.keys())
+            raise BackendNotFoundError(
+                f"Backend type '{backend_type}' not found. "
+                f"Available backends: {available}"
+            )
+        
+        config_class = self._config_types[backend_type]
+        
+        try:
+            return config_class(**kwargs)
+        except Exception as e:
+            raise ConfigurationError(
+                f"Failed to create {backend_type} configuration: {e}"
+            )
+    
+    def create_backend(
+        self,
+        backend_type: str,
+        config: Optional[MemoryConfig] = None,
+        **config_kwargs
+    ) -> BaseMemoryBackend:
+        """Create a memory backend instance.
+        
+        Args:
+            backend_type: Backend type name (e.g., 'sqlite', 'postgresql')
+            config: Optional pre-created configuration instance
+            **config_kwargs: Configuration parameters (if config not provided)
+            
+        Returns:
+            Configured backend instance
             
         Raises:
             BackendNotFoundError: If backend type is not registered
             ConfigurationError: If configuration is invalid
         """
-        cls._ensure_backends_registered()
-        
-        if backend_type not in cls._backends:
+        if backend_type not in self._backends:
+            available = list(self._backends.keys())
             raise BackendNotFoundError(
-                f"Backend '{backend_type}' not found. "
-                f"Available backends: {', '.join(cls.get_backend_names())}"
+                f"Backend type '{backend_type}' not found. "
+                f"Available backends: {available}"
             )
         
-        backend_class = cls._backends[backend_type]
-        
-        # Handle configuration
+        # Create or validate configuration
         if config is None:
-            config = {}
-        elif isinstance(config, MemoryConfig):
-            config = config.dict()
-        elif not isinstance(config, dict):
+            config = self.create_config(backend_type, **config_kwargs)
+        else:
+            expected_type = self._config_types.get(backend_type)
+            if expected_type and not isinstance(config, expected_type):
+                raise ConfigurationError(
+                    f"Invalid config type for {backend_type}. "
+                    f"Expected {expected_type.__name__}, got {type(config).__name__}"
+                )
+        
+        backend_class = self._backends[backend_type]
+        
+        try:
+            return backend_class(config)
+        except Exception as e:
             raise ConfigurationError(
-                f"Config must be dict or MemoryConfig instance, got {type(config)}"
+                f"Failed to create {backend_type} backend: {e}"
+            )
+    
+    def get_backend_class(self, backend_type: str) -> Type[BaseMemoryBackend]:
+        """Get the backend class for a given type.
+        
+        Args:
+            backend_type: Backend type name
+            
+        Returns:
+            Backend class
+            
+        Raises:
+            BackendNotFoundError: If backend type is not registered
+        """
+        if backend_type not in self._backends:
+            available = list(self._backends.keys())
+            raise BackendNotFoundError(
+                f"Backend type '{backend_type}' not found. "
+                f"Available backends: {available}"
             )
         
-        # Merge kwargs into config
-        config.update(kwargs)
-        
-        # Create config object
-        config_class = CONFIG_CLASSES.get(backend_type)
-        if config_class:
-            try:
-                validated_config = config_class(**config)
-            except Exception as e:
-                raise ConfigurationError(f"Invalid configuration for {backend_type}: {e}")
-        else:
-            validated_config = config
-        
-        # Create backend instance
-        try:
-            return backend_class(validated_config)
-        except Exception as e:
-            raise ConfigurationError(f"Failed to create {backend_type} backend: {e}")
+        return self._backends[backend_type]
     
-    @classmethod
-    def create_from_env(cls, prefix: str = "BRUNO_MEMORY") -> MemoryInterface:
-        """Create backend from environment variables.
+    def get_config_class(self, backend_type: str) -> Type[MemoryConfig]:
+        """Get the configuration class for a given backend type.
         
         Args:
-            prefix: Environment variable prefix
+            backend_type: Backend type name
             
         Returns:
-            MemoryInterface implementation
+            Configuration class
             
-        Example environment variables:
-            BRUNO_MEMORY_BACKEND=sqlite
-            BRUNO_MEMORY_DATABASE_PATH=./memory.db
+        Raises:
+            BackendNotFoundError: If backend type is not registered
         """
-        backend_type = os.getenv(f"{prefix}_BACKEND")
-        if not backend_type:
-            raise ConfigurationError(f"Environment variable {prefix}_BACKEND not set")
+        if backend_type not in self._config_types:
+            available = list(self._config_types.keys())
+            raise BackendNotFoundError(
+                f"Backend type '{backend_type}' not found. "
+                f"Available backends: {available}"
+            )
         
-        # Collect all environment variables with the prefix
-        config = {}
-        env_prefix = f"{prefix}_"
-        
-        for key, value in os.environ.items():
-            if key.startswith(env_prefix) and key != f"{prefix}_BACKEND":
-                # Convert BRUNO_MEMORY_DATABASE_PATH to database_path
-                config_key = key[len(env_prefix):].lower()
-                config[config_key] = value
-        
-        return cls.create_backend(backend_type, config)
+        return self._config_types[backend_type]
+
+
+# Global factory instance
+factory = MemoryBackendFactory()
+
+# Convenience functions that use the global factory
+def register_backend(
+    name: str,
+    backend_class: Type[BaseMemoryBackend],
+    config_class: Optional[Type[MemoryConfig]] = None
+) -> None:
+    """Register a memory backend implementation in the global factory.
     
-    @classmethod
-    def create_sqlite(
-        cls, 
-        database_path: str = "./memory.db",
-        **kwargs
-    ) -> MemoryInterface:
-        """Convenience method to create SQLite backend.
-        
-        Args:
-            database_path: Path to SQLite database file
-            **kwargs: Additional configuration parameters
-            
-        Returns:
-            SQLite MemoryInterface implementation
-        """
-        config = {"database_path": database_path, **kwargs}
-        return cls.create_backend("sqlite", config)
+    Args:
+        name: Backend name
+        backend_class: Backend implementation class
+        config_class: Optional configuration class override
+    """
+    factory.register_backend(name, backend_class, config_class)
+
+
+def create_backend(
+    backend_type: str,
+    config: Optional[MemoryConfig] = None,
+    **config_kwargs
+) -> BaseMemoryBackend:
+    """Create a memory backend instance using the global factory.
     
-    @classmethod
-    def create_postgresql(
-        cls,
-        host: str = "localhost", 
-        port: int = 5432,
-        database: str = "bruno_memory",
-        username: str = "postgres",
-        password: str = "",
-        **kwargs
-    ) -> MemoryInterface:
-        """Convenience method to create PostgreSQL backend.
+    Args:
+        backend_type: Backend type name
+        config: Optional pre-created configuration instance
+        **config_kwargs: Configuration parameters
         
-        Args:
-            host: Database host
-            port: Database port
-            database: Database name
-            username: Database username
-            password: Database password
-            **kwargs: Additional configuration parameters
-            
-        Returns:
-            PostgreSQL MemoryInterface implementation
-        """
-        config = {
-            "host": host,
-            "port": port, 
-            "database": database,
-            "username": username,
-            "password": password,
-            **kwargs
-        }
-        return cls.create_backend("postgresql", config)
+    Returns:
+        Configured backend instance
+    """
+    return factory.create_backend(backend_type, config, **config_kwargs)
+
+
+def create_config(backend_type: str, **kwargs) -> MemoryConfig:
+    """Create a configuration instance using the global factory.
     
-    @classmethod
-    def create_redis(
-        cls,
-        host: str = "localhost",
-        port: int = 6379, 
-        password: Optional[str] = None,
-        database: int = 0,
-        **kwargs
-    ) -> MemoryInterface:
-        """Convenience method to create Redis backend.
+    Args:
+        backend_type: Backend type name
+        **kwargs: Configuration parameters
         
-        Args:
-            host: Redis host
-            port: Redis port
-            password: Redis password
-            database: Redis database number
-            **kwargs: Additional configuration parameters
-            
-        Returns:
-            Redis MemoryInterface implementation
-        """
-        config = {
-            "host": host,
-            "port": port,
-            "database": database,
-            **kwargs
-        }
-        if password:
-            config["password"] = password
-            
-        return cls.create_backend("redis", config)
+    Returns:
+        Configuration instance
+    """
+    return factory.create_config(backend_type, **kwargs)
+
+
+def list_backends() -> Dict[str, str]:
+    """List all registered backend implementations.
+    
+    Returns:
+        Dictionary mapping backend names to class names
+    """
+    return factory.list_backends()
+
+
+__all__ = [
+    'MemoryBackendFactory',
+    'factory',
+    'register_backend',
+    'create_backend',
+    'create_config',
+    'list_backends'
+]
