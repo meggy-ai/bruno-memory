@@ -51,6 +51,11 @@ class CacheError(MemoryError):
     pass
 
 
+class BackupError(MemoryError):
+    """Raised when backup/export operations fail."""
+    pass
+
+
 class EmbeddingError(MemoryError):
     """Raised when embedding operations fail."""
     pass
