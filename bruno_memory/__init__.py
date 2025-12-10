@@ -29,6 +29,14 @@ from .base import (
 
 # Import backends to trigger auto-registration
 from . import backends
+
+# Import managers
+from .managers import (
+    ConversationManager,
+    ContextBuilder,
+    MemoryRetriever
+)
+
 from .exceptions import (
     MemoryError,
     ConnectionError,
@@ -68,6 +76,10 @@ __all__ = [
     'create_config',
     'list_backends', 
     'register_backend',
+    # Manager classes
+    'ConversationManager',
+    'ContextBuilder',
+    'MemoryRetriever',
     # Exception classes
     'MemoryError',
     'ConnectionError',
