@@ -22,6 +22,11 @@ from bruno_memory.exceptions import BackupError
 logger = logging.getLogger(__name__)
 
 
+def _get_timestamp(obj: Union[Message, MemoryEntry]) -> Optional[datetime]:
+    """Get timestamp from Message (timestamp) or MemoryEntry (created_at)."""
+    return getattr(obj, 'timestamp', None) or getattr(obj, 'created_at', None)
+
+
 class BackupExporter:
     """
     Backup and export utility using pandas for data transformation.
@@ -73,11 +78,11 @@ class BackupExporter:
         # Convert to dictionaries
         data = [
             {
-                "id": msg.id,
+                "id": str(msg.id),
                 "role": msg.role.value if hasattr(msg.role, 'value') else msg.role,
                 "content": msg.content,
                 "message_type": msg.message_type.value if hasattr(msg.message_type, 'value') else msg.message_type,
-                "created_at": msg.created_at.isoformat() if msg.created_at else None,
+                "created_at": ts.isoformat() if (ts := _get_timestamp(msg)) else None,
                 "metadata": msg.metadata.model_dump() if msg.metadata else {},
             }
             for msg in messages
@@ -116,11 +121,11 @@ class BackupExporter:
         # Convert to DataFrame
         data = [
             {
-                "id": msg.id,
+                "id": str(msg.id),
                 "role": msg.role.value if hasattr(msg.role, 'value') else msg.role,
                 "content": msg.content,
                 "message_type": msg.message_type.value if hasattr(msg.message_type, 'value') else msg.message_type,
-                "created_at": msg.created_at.isoformat() if msg.created_at else None,
+                "created_at": ts.isoformat() if (ts := _get_timestamp(msg)) else None,
                 "session_id": msg.metadata.session_id if msg.metadata and hasattr(msg.metadata, 'session_id') else None,
                 "user_id": msg.metadata.user_id if msg.metadata and hasattr(msg.metadata, 'user_id') else None,
             }
@@ -160,11 +165,11 @@ class BackupExporter:
         # Main messages data
         messages_data = [
             {
-                "id": msg.id,
+                "id": str(msg.id),
                 "role": msg.role.value if hasattr(msg.role, 'value') else msg.role,
                 "content": msg.content[:1000],  # Truncate long content
                 "message_type": msg.message_type.value if hasattr(msg.message_type, 'value') else msg.message_type,
-                "created_at": msg.created_at,
+                "created_at": _get_timestamp(msg),
                 "session_id": msg.metadata.session_id if msg.metadata and hasattr(msg.metadata, 'session_id') else None,
             }
             for msg in messages
@@ -210,10 +215,10 @@ class BackupExporter:
         # Convert to dictionaries
         data = [
             {
-                "id": mem.id,
+                "id": str(mem.id),
                 "content": mem.content,
                 "memory_type": mem.memory_type.value if hasattr(mem.memory_type, 'value') else mem.memory_type,
-                "user_id": mem.user_id,
+                "user_id": str(mem.user_id) if mem.user_id else None,
                 "created_at": mem.created_at.isoformat() if mem.created_at else None,
                 "updated_at": mem.updated_at.isoformat() if mem.updated_at else None,
                 "metadata": mem.metadata.model_dump() if mem.metadata else {},

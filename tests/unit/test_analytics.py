@@ -21,25 +21,25 @@ def sample_messages():
             content="Hello, how can you help me?",
             role=MessageRole.USER,
             message_type=MessageType.TEXT,
-            created_at=base_time,
+            timestamp=base_time,
         ),
         Message(
             content="I can help you with many things!",
             role=MessageRole.ASSISTANT,
             message_type=MessageType.TEXT,
-            created_at=base_time + timedelta(seconds=2),
+            timestamp=base_time + timedelta(seconds=2),
         ),
         Message(
             content="Tell me about Python",
             role=MessageRole.USER,
             message_type=MessageType.TEXT,
-            created_at=base_time + timedelta(seconds=5),
+            timestamp=base_time + timedelta(seconds=5),
         ),
         Message(
             content="Python is a high-level programming language...",
             role=MessageRole.ASSISTANT,
             message_type=MessageType.TEXT,
-            created_at=base_time + timedelta(seconds=8),
+            timestamp=base_time + timedelta(seconds=8),
         ),
     ]
 

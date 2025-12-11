@@ -14,7 +14,9 @@ from .factory import (
     create_backend, 
     create_config, 
     list_backends, 
-    register_backend
+    register_backend,
+    create_from_env,
+    create_with_fallback
 )
 from .base import (
     BaseMemoryBackend,

@@ -5,20 +5,43 @@ Provides a centralized factory pattern for creating memory backends
 with proper configuration validation and type safety.
 """
 
-from typing import Dict, Type, Any, Optional
+from typing import Dict, Type, Any, Optional, List
 import inspect
+import logging
+import os
+from importlib.metadata import entry_points
+
+try:
+    from dotenv import load_dotenv
+    DOTENV_AVAILABLE = True
+except ImportError:
+    DOTENV_AVAILABLE = False
 
 from .base import BaseMemoryBackend, MemoryConfig, CONFIG_CLASSES
 from .exceptions import ConfigurationError, BackendNotFoundError, ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 class MemoryBackendFactory:
     """Factory for creating memory backend instances."""
     
-    def __init__(self):
-        """Initialize the factory with empty backend registry."""
+    def __init__(self, auto_discover: bool = True, load_env: bool = True):
+        """Initialize the factory with empty backend registry.
+        
+        Args:
+            auto_discover: Automatically discover backends via entry points
+            load_env: Load environment variables from .env file
+        """
         self._backends: Dict[str, Type[BaseMemoryBackend]] = {}
         self._config_types: Dict[str, Type[MemoryConfig]] = CONFIG_CLASSES.copy()
+        
+        if load_env and DOTENV_AVAILABLE:
+            load_dotenv()
+            logger.info("Loaded environment variables from .env")
+        
+        if auto_discover:
+            self.discover_backends()
     
     def register_backend(
         self,
@@ -54,6 +77,42 @@ class MemoryBackendFactory:
                     f"got {config_class.__name__}"
                 )
             self._config_types[name] = config_class
+    
+    def unregister_backend(self, name: str) -> None:
+        """Unregister a memory backend implementation.
+        
+        Args:
+            name: Backend name to unregister
+        """
+        self._backends.pop(name, None)
+        self._config_types.pop(name, None)
+    
+    def discover_backends(self) -> None:
+        """Discover and register backends via entry points.
+        
+        Looks for entry points in the 'bruno_memory.backends' group.
+        Each entry point should provide a backend class.
+        """
+        try:
+            eps = entry_points()
+            # Handle both old and new entry_points() API
+            if hasattr(eps, 'select'):
+                # Python 3.10+ API
+                backend_entries = eps.select(group='bruno_memory.backends')
+            else:
+                # Python 3.9 API
+                backend_entries = eps.get('bruno_memory.backends', [])
+            
+            for ep in backend_entries:
+                try:
+                    backend_class = ep.load()
+                    # Entry point name is the backend name
+                    self.register_backend(ep.name, backend_class)
+                    logger.info(f"Discovered backend via entry point: {ep.name}")
+                except Exception as e:
+                    logger.warning(f"Failed to load backend entry point {ep.name}: {e}")
+        except Exception as e:
+            logger.warning(f"Backend discovery failed: {e}")
     
     def unregister_backend(self, name: str) -> None:
         """Unregister a memory backend implementation.
@@ -190,6 +249,90 @@ class MemoryBackendFactory:
             )
         
         return self._config_types[backend_type]
+    
+    def create_from_env(
+        self,
+        backend_type_env: str = "BRUNO_MEMORY_BACKEND",
+        **config_overrides
+    ) -> BaseMemoryBackend:
+        """Create a backend from environment variables.
+        
+        Args:
+            backend_type_env: Environment variable name for backend type
+            **config_overrides: Override specific configuration values
+            
+        Returns:
+            Configured backend instance
+            
+        Raises:
+            ConfigurationError: If environment configuration is invalid
+        """
+        backend_type = os.getenv(backend_type_env)
+        if not backend_type:
+            raise ConfigurationError(
+                f"Environment variable {backend_type_env} not set. "
+                f"Available backends: {list(self._backends.keys())}"
+            )
+        
+        # Get configuration class and extract env-based config
+        config_class = self.get_config_class(backend_type)
+        
+        # Build config from environment
+        config_dict = {}
+        for field_name in config_class.model_fields.keys():
+            env_key = f"BRUNO_MEMORY_{backend_type.upper()}_{field_name.upper()}"
+            env_value = os.getenv(env_key)
+            if env_value is not None:
+                config_dict[field_name] = env_value
+        
+        # Apply overrides
+        config_dict.update(config_overrides)
+        
+        logger.info(f"Creating {backend_type} backend from environment")
+        return self.create_backend(backend_type, **config_dict)
+    
+    def create_with_fallback(
+        self,
+        backend_types: List[str],
+        configs: Optional[List[MemoryConfig]] = None,
+        **common_config
+    ) -> BaseMemoryBackend:
+        """Create a backend with fallback chain.
+        
+        Tries each backend in order until one succeeds.
+        
+        Args:
+            backend_types: List of backend types to try in order
+            configs: Optional list of pre-created configs (same order)
+            **common_config: Common config parameters for all backends
+            
+        Returns:
+            First successfully created backend
+            
+        Raises:
+            ConfigurationError: If all backends fail to create
+        """
+        errors = []
+        
+        for i, backend_type in enumerate(backend_types):
+            try:
+                config = configs[i] if configs and i < len(configs) else None
+                backend = self.create_backend(
+                    backend_type,
+                    config=config,
+                    **common_config
+                )
+                logger.info(f"Successfully created {backend_type} backend")
+                return backend
+            except Exception as e:
+                error_msg = f"{backend_type}: {e}"
+                errors.append(error_msg)
+                logger.warning(f"Failed to create {backend_type} backend: {e}")
+        
+        raise ConfigurationError(
+            f"All backends failed to create. Tried: {backend_types}. "
+            f"Errors: {'; '.join(errors)}"
+        )
 
 
 # Global factory instance
@@ -249,6 +392,40 @@ def list_backends() -> Dict[str, str]:
         Dictionary mapping backend names to class names
     """
     return factory.list_backends()
+
+
+def create_from_env(
+    backend_type_env: str = "BRUNO_MEMORY_BACKEND",
+    **config_overrides
+) -> BaseMemoryBackend:
+    """Create a backend from environment variables using the global factory.
+    
+    Args:
+        backend_type_env: Environment variable name for backend type
+        **config_overrides: Override specific configuration values
+        
+    Returns:
+        Configured backend instance
+    """
+    return factory.create_from_env(backend_type_env, **config_overrides)
+
+
+def create_with_fallback(
+    backend_types: List[str],
+    configs: Optional[List[MemoryConfig]] = None,
+    **common_config
+) -> BaseMemoryBackend:
+    """Create a backend with fallback chain using the global factory.
+    
+    Args:
+        backend_types: List of backend types to try in order
+        configs: Optional list of pre-created configs
+        **common_config: Common config parameters
+        
+    Returns:
+        First successfully created backend
+    """
+    return factory.create_with_fallback(backend_types, configs, **common_config)
 
 
 __all__ = [

@@ -8,7 +8,7 @@ Uses pandas for efficient data analysis.
 import logging
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 try:
     import pandas as pd
@@ -19,6 +19,11 @@ except ImportError:
 from bruno_core.models import Message, MemoryEntry
 
 logger = logging.getLogger(__name__)
+
+
+def _get_timestamp(obj: Union[Message, MemoryEntry]) -> Optional[datetime]:
+    """Get timestamp from Message (timestamp) or MemoryEntry (created_at)."""
+    return getattr(obj, 'timestamp', None) or getattr(obj, 'created_at', None)
 
 
 class MemoryAnalytics:
@@ -75,7 +80,8 @@ class MemoryAnalytics:
         min_length = min(lengths) if lengths else 0
         
         # Temporal analysis
-        timestamps = [msg.created_at for msg in messages if msg.created_at]
+        timestamps = [_get_timestamp(msg) for msg in messages]
+        timestamps = [ts for ts in timestamps if ts is not None]
         if timestamps:
             first_message = min(timestamps)
             last_message = max(timestamps)
@@ -160,7 +166,8 @@ class MemoryAnalytics:
         tag_counts = Counter(all_tags)
         
         # Temporal analysis
-        timestamps = [mem.created_at for mem in memories if mem.created_at]
+        timestamps = [_get_timestamp(mem) for mem in memories]
+        timestamps = [ts for ts in timestamps if ts is not None]
         if timestamps:
             first_memory = min(timestamps)
             last_memory = max(timestamps)
@@ -221,8 +228,10 @@ class MemoryAnalytics:
         # Response times (if timestamps available)
         response_times = []
         for i in range(len(messages) - 1):
-            if messages[i].created_at and messages[i + 1].created_at:
-                delta = (messages[i + 1].created_at - messages[i].created_at).total_seconds()
+            ts1 = _get_timestamp(messages[i])
+            ts2 = _get_timestamp(messages[i + 1])
+            if ts1 and ts2:
+                delta = (ts2 - ts1).total_seconds()
                 response_times.append(delta)
         
         avg_response_time = sum(response_times) / len(response_times) if response_times else None
@@ -267,11 +276,11 @@ class MemoryAnalytics:
         
         data = [
             {
-                "id": msg.id,
+                "id": str(msg.id),
                 "role": msg.role.value if hasattr(msg.role, 'value') else msg.role,
                 "content_length": len(msg.content),
                 "message_type": msg.message_type.value if hasattr(msg.message_type, 'value') else msg.message_type,
-                "created_at": msg.created_at,
+                "created_at": _get_timestamp(msg),
                 "session_id": msg.metadata.session_id if msg.metadata and hasattr(msg.metadata, 'session_id') else None,
                 "user_id": msg.metadata.user_id if msg.metadata and hasattr(msg.metadata, 'user_id') else None,
             }
