@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-12-11
+
+### Changed
+- Simplified publish workflow to single job triggered by GitHub releases
+- Removed separate TestPyPI and manual workflow dispatch options
+- Updated to Python 3.11 for publishing
+- Streamlined workflow from 88 lines to 35 lines
+
 ### Added
 - Initial project structure
 - SQLite backend implementation
@@ -27,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated testing across Python 3.10, 3.11, 3.12
 - Code quality tools (black, ruff, mypy)
 - Security scanning and dependency auditing
+- Git-based version management with bump_version.py script
 
 ### Changed
 
