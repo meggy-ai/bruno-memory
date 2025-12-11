@@ -4,12 +4,9 @@
 
 [![CI](https://github.com/meggy-ai/bruno-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/meggy-ai/bruno-memory/actions/workflows/ci.yml)
 [![Lint](https://github.com/meggy-ai/bruno-memory/actions/workflows/lint.yml/badge.svg)](https://github.com/meggy-ai/bruno-memory/actions/workflows/lint.yml)
-[![codecov](https://codecov.io/gh/meggy-ai/bruno-memory/branch/main/graph/badge.svg)](https://codecov.io/gh/meggy-ai/bruno-memory)
 [![PyPI version](https://badge.fury.io/py/bruno-memory.svg)](https://badge.fury.io/py/bruno-memory)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://meggy-ai.github.io/bruno-memory/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Dependencies
 ```bash
