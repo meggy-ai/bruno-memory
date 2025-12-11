@@ -10,7 +10,16 @@ I have completed bruno-core and bruno-llm and their repos are at following links
 https://github.com/meggy-ai/bruno-core
 https://github.com/meggy-ai/bruno-llm
 
-All the details about project overview is in project_overview.md.
+I have also finished code for bruno-memory for this repo,
+we need to work on next steps,
+last time when we developed features for this library
+some of the tests failed because we dont have redis and postgres
+running, i would like to set up docker for different environments
+so that we can run those test and test our library completely,
+create docker compose files so that we can have the environment 
+ready and then run the test so that we can check the library
+throughly
+
 
 1.0 You need to create a plan first with parent tasks and children tasks
 2.0 Create a progress tracker in the plan so that we will keep track of the 
@@ -18,7 +27,3 @@ All the details about project overview is in project_overview.md.
     we will know where we left off and what to do next
 3.0 After creating plan we will start implementation one by one
 4.0 create an md file for the plan 
-
-
-lets do one thing, lets start from scratch, delete all implementation code for phase 1 and phase 2, keep only implementation_plan and project_overview.md, start from beginning, use the libraries at following urls: https://github.com/meggy-ai/bruno-core
-https://github.com/meggy-ai/bruno-llm, develop phase 0 first and we will go to phase 1, Update implementation plan VERY EXPLICITLY THAT WE NEED TO DO THE IMPLEMENTATION KEEPING THE CODE ALIGNED WITH THE LIBRARIES BRUNO-CORE and BRUNO-LLM, if there is alignment problem between bruno-core and bruno-llm, ALERT ME AND ASK ME TO FIX THAT FIRST BEFORE WE IMPLEMENT THIS LAYER
