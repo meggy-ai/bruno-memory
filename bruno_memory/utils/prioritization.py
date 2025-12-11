@@ -389,8 +389,10 @@ def prune_low_priority_memories(
     scorer = MemoryScorer()
     pruner = MemoryPruner(scorer, threshold, max_age_days)
     
-    prunable = set(pruner.get_prunable_memories(memories))
-    keep = [m for m in memories if m not in prunable]
+    prunable = pruner.get_prunable_memories(memories)
+    # Use IDs to identify prunable memories (MemoryEntry is not hashable)
+    prunable_ids = {str(m.id) for m in prunable}
+    keep = [m for m in memories if str(m.id) not in prunable_ids]
     prune = list(prunable)
     
     return keep, prune

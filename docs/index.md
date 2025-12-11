@@ -1,15 +1,5 @@
 # bruno-memory
 
-<div align="center">
-
-**Advanced memory management for bruno-ai**
-
-[![Python Version](https://img.shields.io/pypi/pyversions/bruno-memory)](https://pypi.org/project/bruno-memory/)
-[![License](https://img.shields.io/github/license/meggy-ai/bruno-memory)](https://github.com/meggy-ai/bruno-memory/blob/main/LICENSE)
-[![Tests](https://img.shields.io/github/actions/workflow/status/meggy-ai/bruno-memory/tests.yml)](https://github.com/meggy-ai/bruno-memory/actions)
-
-</div>
-
 ## Overview
 
 bruno-memory is a high-performance, multi-backend memory system providing persistent storage and intelligent retrieval for AI conversations and context management.
