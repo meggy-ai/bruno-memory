@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-12-11
+
+### Changed
+- Simplified CI/CD workflows for easier maintenance
+- Removed complex release and dependency monitoring workflows
+- Streamlined CI to test on Ubuntu + Windows with Python 3.11-3.12 only
+- Consolidated lint workflow to single job
+- Moved documentation deployment to publish workflow
+
+### Removed
+- macOS testing from CI (can be added back later)
+- Python 3.10 support (minimum now 3.11)
+- Backend integration tests with PostgreSQL and Redis services
+- Separate documentation build job in CI
+- Dependency monitoring workflow
+- Complex release workflow with automatic changelog generation
+
 ## [0.1.1] - 2025-12-11
 
 ### Changed
