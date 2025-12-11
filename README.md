@@ -224,6 +224,8 @@ Bruno Memory is designed for high performance:
 
 ## 🧪 Testing
 
+### Quick Testing
+
 ```bash
 # Install with dev dependencies
 pip install bruno-memory[dev]
@@ -233,14 +235,81 @@ pytest
 
 # Run with coverage
 pytest --cov=bruno_memory --cov-report=html
-
-# Run integration tests (requires services)
-docker-compose up -d  # Start test services
-pytest -m integration
-
-# Run benchmarks
-pytest -m benchmark
 ```
+
+### Docker-Based Testing
+
+Bruno Memory includes comprehensive Docker-based testing infrastructure for all backends:
+
+```bash
+# Quick start - run all tests with Docker services
+make test-docker
+
+# Test specific backends
+make test-postgresql  # PostgreSQL backend only
+make test-redis       # Redis backend only
+make test-chromadb    # ChromaDB vector backend
+make test-qdrant      # Qdrant vector backend
+make test-vector      # All vector backends
+
+# Use minimal profile (PostgreSQL + Redis only)
+make test-docker-minimal
+
+# Keep environment running for iterative development
+./scripts/run-tests-docker.ps1 -KeepEnv
+```
+
+#### Manual Service Management
+
+```bash
+# Start all services
+make docker-up
+
+# Check service status
+make docker-status
+
+# View logs
+make docker-logs
+
+# Stop services (preserve data)
+make docker-down
+
+# Complete cleanup (remove data)
+make docker-teardown
+```
+
+#### Cross-Platform Scripts
+
+All scripts are available in both PowerShell (Windows) and Bash (Linux/Mac):
+
+```bash
+# PowerShell (Windows)
+.\scripts\setup-test-env.ps1 -Profile full
+.\scripts\run-tests-docker.ps1 -Verbose
+.\scripts\teardown-test-env.ps1 -Volumes
+
+# Bash (Linux/Mac)
+bash scripts/setup-test-env.sh --profile full
+bash scripts/run-tests-docker.sh --verbose
+bash scripts/teardown-test-env.sh --volumes
+```
+
+**📖 Full Docker testing documentation:** [DOCKER_TESTING_QUICKSTART.md](DOCKER_TESTING_QUICKSTART.md)
+
+### Test Profiles
+
+- **minimal**: PostgreSQL + Redis (fastest)
+- **full**: All services including ChromaDB and Qdrant
+- **ci**: CI-optimized with tmpfs and no volumes
+
+### Service Ports
+
+| Service | Port | Use Case |
+|---------|------|----------|
+| PostgreSQL | 5432 | Relational storage with pgvector |
+| Redis | 6379 | Caching and sessions |
+| ChromaDB | 8000 | Vector similarity search |
+| Qdrant | 6333 (HTTP), 6334 (gRPC) | Production vector search |
 
 ## 🔗 Integration
 

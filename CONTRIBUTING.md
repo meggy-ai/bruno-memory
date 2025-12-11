@@ -81,6 +81,8 @@ Follow the coding standards (see below).
 
 ### 3. Run Tests
 
+#### Standard Testing
+
 ```bash
 # Run all tests
 pytest
@@ -94,6 +96,59 @@ pytest --cov=bruno_memory --cov-report=html
 # Run fast tests only (skip slow integration tests)
 pytest -m "not slow"
 ```
+
+#### Docker-Based Testing
+
+For comprehensive testing with all backends (PostgreSQL, Redis, ChromaDB, Qdrant), use the Docker testing infrastructure:
+
+```bash
+# Quick start - run all tests with Docker
+make test-docker
+
+# Test specific backend
+make test-postgresql
+make test-redis
+make test-chromadb
+make test-qdrant
+
+# Start services for iterative development
+./scripts/setup-test-env.ps1 -Profile full  # Windows
+bash scripts/setup-test-env.sh --profile full  # Linux/Mac
+
+# Run tests manually with services running
+pytest tests/ -m postgresql -v
+
+# Stop services when done
+./scripts/teardown-test-env.ps1  # Windows
+bash scripts/teardown-test-env.sh  # Linux/Mac
+```
+
+**Docker Test Profiles:**
+
+- `minimal`: PostgreSQL + Redis only (fastest)
+- `full`: All services (PostgreSQL, Redis, ChromaDB, Qdrant)
+- `ci`: Optimized for CI/CD
+
+**Common Docker Commands:**
+
+```bash
+# Start all services
+make docker-up
+
+# Check service status
+make docker-status
+
+# View logs
+make docker-logs
+
+# Stop services (keep data)
+make docker-down
+
+# Complete cleanup (remove data)
+make docker-teardown
+```
+
+**See [DOCKER_TESTING_QUICKSTART.md](DOCKER_TESTING_QUICKSTART.md) for detailed Docker testing documentation.**
 
 ### 4. Format and Lint
 
