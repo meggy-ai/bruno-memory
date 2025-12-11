@@ -102,6 +102,11 @@ class RedisMemoryBackend(BaseMemoryBackend):
         """Disconnect from Redis (alias for close)."""
         await self.close()
 
+    async def _ensure_initialized(self) -> None:
+        """Ensure backend is initialized."""
+        if not self._initialized:
+            await self.initialize()
+
     async def health_check(self) -> bool:
         """Check if Redis backend is healthy.
 

@@ -257,7 +257,7 @@ class TestSQLiteBackend:
         query = MemoryQuery(user_id=user_id, min_importance=0.5)
         results = await sqlite_backend.search_memories(query)
         # Filter results client-side for test validation
-        filtered_results = [r for r in results if r.importance >= 0.5]
+        filtered_results = [r for r in results if r.metadata.importance >= 0.5]
         assert len(filtered_results) == 1
         assert filtered_results[0].id == mem_id_1
 

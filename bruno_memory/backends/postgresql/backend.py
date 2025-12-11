@@ -55,6 +55,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
         self.config: PostgreSQLConfig = config
         self._pool: asyncpg.Pool | None = None
         self._lock = asyncio.Lock()
+        self._initialized = False
 
     async def initialize(self) -> None:
         """Initialize connection pool and create schema."""

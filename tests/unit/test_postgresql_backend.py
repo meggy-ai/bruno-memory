@@ -243,7 +243,7 @@ class TestPostgreSQLBackend:
 
         preference_memory = MemoryEntry(
             content="User prefers dark mode",
-            memory_type=MemoryType.PREFERENCE,
+            memory_type=MemoryType.SEMANTIC,
             user_id=user_id,
             metadata=MemoryMetadata(importance=0.7),
         )
@@ -275,7 +275,7 @@ class TestPostgreSQLBackend:
 
         mem2 = MemoryEntry(
             content="User loves Python development",
-            memory_type=MemoryType.PREFERENCE,
+            memory_type=MemoryType.SEMANTIC,
             user_id=user_id,
             metadata=MemoryMetadata(importance=0.9),
         )
@@ -495,8 +495,9 @@ async def test_factory_integration():
     """Test PostgreSQL backend factory registration."""
     from bruno_memory.factory import MemoryBackendFactory
 
+    factory = MemoryBackendFactory()
     config = PostgreSQLConfig(**POSTGRES_CONFIG)
-    backend = MemoryBackendFactory.create_backend("postgresql", config)
+    backend = factory.create_backend("postgresql", config)
 
     assert isinstance(backend, PostgreSQLMemoryBackend)
     await backend.close()

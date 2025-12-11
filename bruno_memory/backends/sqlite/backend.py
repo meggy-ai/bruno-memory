@@ -179,6 +179,9 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         offset: int = 0,
     ) -> list[Message]:
         """Retrieve messages with optional filtering."""
+        if not self._connection:
+            raise StorageError("Backend not connected")
+        
         try:
             query_parts = ["SELECT * FROM messages"]
             params = []
@@ -669,6 +672,9 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         self, query_text: str, conversation_id: str | None = None, limit: int = 50
     ) -> list[Message]:
         """Search messages by text content."""
+        if not self._connection:
+            raise StorageError("Backend not connected")
+        
         try:
             query_parts = ["SELECT * FROM messages"]
             params = []
@@ -701,32 +707,36 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         except Exception as e:
             raise QueryError(f"Failed to search messages: {e}")
 
-    async def get_statistics(self) -> dict[str, Any]:
-        """Get database statistics."""
+    async def get_statistics(self, user_id: str | None = None) -> dict[str, Any]:
+        """Get database statistics.
+        
+        Args:
+            user_id: Optional user ID to filter statistics (currently unused)
+        """
         try:
             stats = {}
 
             # Get message count
             async with self._connection.execute("SELECT COUNT(*) FROM messages") as cursor:
                 row = await cursor.fetchone()
-                stats["total_messages"] = row[0] if row else 0
+                stats["message_count"] = row[0] if row else 0
 
             # Get memory count
             async with self._connection.execute("SELECT COUNT(*) FROM memory_entries") as cursor:
                 row = await cursor.fetchone()
-                stats["total_memories"] = row[0] if row else 0
+                stats["memory_count"] = row[0] if row else 0
 
             # Get user count
             async with self._connection.execute("SELECT COUNT(*) FROM user_contexts") as cursor:
                 row = await cursor.fetchone()
-                stats["total_users"] = row[0] if row else 0
+                stats["user_count"] = row[0] if row else 0
 
             # Get conversation count
             async with self._connection.execute(
                 "SELECT COUNT(*) FROM conversation_contexts"
             ) as cursor:
                 row = await cursor.fetchone()
-                stats["total_conversations"] = row[0] if row else 0
+                stats["conversation_count"] = row[0] if row else 0
 
             # Get active session count
             async with self._connection.execute(

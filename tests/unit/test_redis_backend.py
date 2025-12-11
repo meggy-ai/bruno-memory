@@ -75,7 +75,7 @@ def sample_memory_entry():
         content="Test memory content",
         memory_type=MemoryType.FACT,
         user_id="test_user",
-        conversation_id=uuid4(),
+        conversation_id=str(uuid4()),
         metadata=MemoryMetadata(
             importance=0.8,
             confidence=0.9,
@@ -211,7 +211,7 @@ class TestRedisBackend:
 
         preference_memory = MemoryEntry(
             content="User prefers dark mode",
-            memory_type=MemoryType.PREFERENCE,
+            memory_type=MemoryType.SEMANTIC,
             user_id=user_id,
             metadata=MemoryMetadata(importance=0.7),
         )
@@ -243,7 +243,7 @@ class TestRedisBackend:
 
         mem2 = MemoryEntry(
             content="User loves Python development",
-            memory_type=MemoryType.PREFERENCE,
+            memory_type=MemoryType.SEMANTIC,
             user_id=user_id,
             metadata=MemoryMetadata(importance=0.9),
         )
