@@ -12,6 +12,10 @@ pip install git+https://github.com/meggy-ai/bruno-llm.git
 
 Bruno Memory provides multiple backend storage options for conversation history, user context, and semantic memory while maintaining a consistent API for AI assistants to interact with. It implements the `MemoryInterface` from [bruno-core](https://github.com/meggy-ai/bruno-core) with full embedding support via [bruno-llm](https://github.com/meggy-ai/bruno-llm).
 
+## 📚 Documentation
+
+**[View Full Documentation](https://meggy-ai.github.io/bruno-memory/)** | [Quick Start](https://meggy-ai.github.io/bruno-memory/getting-started/quickstart/) | [API Reference](https://meggy-ai.github.io/bruno-memory/api/factory/) | [Examples](https://meggy-ai.github.io/bruno-memory/examples/basic/)
+
 ## ✨ Features
 
 - **Multiple Storage Backends**: SQLite, PostgreSQL, Redis, ChromaDB, Qdrant
