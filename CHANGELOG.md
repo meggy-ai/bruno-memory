@@ -68,35 +68,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
-
-## [0.1.0] - YYYY-MM-DD
-
-### Added
-- Initial release
-- Core memory management functionality
-- Multiple backend support
-- Embedding integration
-- Basic documentation
-
----
-
-## Release Process
-
-1. Update version in `pyproject.toml` and `bruno_memory/__init__.py`
-2. Update this CHANGELOG with release date and changes
-3. Commit changes: `git commit -am "Release v0.1.0"`
-4. Create tag: `git tag -a v0.1.0 -m "Release version 0.1.0"`
-5. Push: `git push origin main --tags`
-6. GitHub Actions will automatically publish to PyPI
-
-## Version Policy
-
-- **Major** (X.0.0): Breaking API changes
-- **Minor** (0.X.0): New features, backwards compatible
-- **Patch** (0.0.X): Bug fixes, backwards compatible
-
-## Migration Guides
-
-### Migrating from 0.0.x to 0.1.x
-
-[Migration guide will be added here when releasing 0.1.0]
