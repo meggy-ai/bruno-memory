@@ -1,6 +1,6 @@
 # Makefile for bruno-memory
 
-.PHONY: help install install-dev test test-fast lint format type-check clean docs docs-serve build publish bump-patch bump-minor bump-major
+.PHONY: help install install-dev test test-fast lint format type-check clean docs docs-serve build publish bump-patch bump-minor bump-major docker-up docker-down docker-down-volumes docker-logs docker-status test-docker test-docker-minimal test-docker-keep test-postgresql test-redis test-chromadb test-qdrant test-vector docker-setup docker-teardown
 
 help:
 	@echo "bruno-memory development commands:"
@@ -12,6 +12,11 @@ help:
 	@echo "Testing:"
 	@echo "  make test          Run all tests with coverage"
 	@echo "  make test-fast     Run tests without slow backends"
+	@echo "  make test-docker   Run tests with Docker services (full)"
+	@echo "  make test-minimal  Run tests with minimal Docker services"
+	@echo "  make docker-up     Start Docker services"
+	@echo "  make docker-down   Stop Docker services"
+	@echo "  make docker-logs   Show Docker service logs"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint          Run linting checks (ruff, black)"
@@ -80,3 +85,49 @@ bump-minor:
 
 bump-major:
 	python scripts/bump_version.py major
+
+# Docker Testing Targets
+docker-up:
+	docker-compose up -d
+
+docker-down:
+	docker-compose down
+
+docker-down-volumes:
+	docker-compose down -v
+
+docker-logs:
+	docker-compose logs -f
+
+docker-status:
+	docker-compose ps
+
+test-docker:
+	bash scripts/run-tests-docker.sh --profile full
+
+test-docker-minimal:
+	bash scripts/run-tests-docker.sh --profile minimal
+
+test-docker-keep:
+	bash scripts/run-tests-docker.sh --profile full --keep-env
+
+test-postgresql:
+	bash scripts/run-tests-docker.sh --profile minimal --markers postgresql
+
+test-redis:
+	bash scripts/run-tests-docker.sh --profile minimal --markers redis
+
+test-chromadb:
+	bash scripts/run-tests-docker.sh --profile full --markers chromadb
+
+test-qdrant:
+	bash scripts/run-tests-docker.sh --profile full --markers qdrant
+
+test-vector:
+	bash scripts/run-tests-docker.sh --profile full --markers vector
+
+docker-setup:
+	bash scripts/setup-test-env.sh --profile full
+
+docker-teardown:
+	bash scripts/teardown-test-env.sh --profile all --volumes
