@@ -219,6 +219,7 @@ GROUP BY user_id, memory_type;
 # Version tracking for schema migrations
 SCHEMA_VERSION = "1.0.0"
 
+
 def get_schema_version_sql() -> str:
     """Get SQL to create and populate schema version table."""
     return f"""
@@ -232,59 +233,59 @@ def get_schema_version_sql() -> str:
     VALUES ('{SCHEMA_VERSION}', 'Initial bruno-memory SQLite schema');
     """
 
+
 def get_full_schema_sql() -> str:
     """Get complete schema SQL including version tracking."""
     return SCHEMA_SQL + "\n\n" + get_schema_version_sql()
+
 
 # Utility functions for schema operations
 def get_table_names() -> list[str]:
     """Get list of all table names in the schema."""
     return [
-        'messages',
-        'memory_entries', 
-        'session_contexts',
-        'user_contexts',
-        'conversation_contexts',
-        'memory_categories',
-        'memory_tags',
-        'memory_entry_categories',
-        'memory_entry_tags',
-        'schema_version'
+        "messages",
+        "memory_entries",
+        "session_contexts",
+        "user_contexts",
+        "conversation_contexts",
+        "memory_categories",
+        "memory_tags",
+        "memory_entry_categories",
+        "memory_entry_tags",
+        "schema_version",
     ]
+
 
 def get_view_names() -> list[str]:
     """Get list of all view names in the schema."""
-    return [
-        'active_sessions',
-        'recent_conversations', 
-        'memory_stats'
-    ]
+    return ["active_sessions", "recent_conversations", "memory_stats"]
+
 
 def get_index_names() -> list[str]:
     """Get list of all index names in the schema."""
     return [
-        'idx_messages_conversation_id',
-        'idx_messages_timestamp',
-        'idx_messages_parent_id',
-        'idx_messages_role',
-        'idx_memory_entries_user_id',
-        'idx_memory_entries_conversation_id',
-        'idx_memory_entries_memory_type',
-        'idx_memory_entries_created_at',
-        'idx_memory_entries_updated_at',
-        'idx_memory_entries_last_accessed',
-        'idx_memory_entries_expires_at',
-        'idx_memory_entries_importance',
-        'idx_memory_entries_confidence',
-        'idx_session_contexts_user_id',
-        'idx_session_contexts_conversation_id',
-        'idx_session_contexts_is_active',
-        'idx_session_contexts_last_activity',
-        'idx_user_contexts_last_active',
-        'idx_conversation_contexts_user_id',
-        'idx_conversation_contexts_created_at',
-        'idx_conversation_contexts_updated_at',
-        'idx_memory_categories_parent_id',
-        'idx_memory_categories_name',
-        'idx_memory_tags_name'
+        "idx_messages_conversation_id",
+        "idx_messages_timestamp",
+        "idx_messages_parent_id",
+        "idx_messages_role",
+        "idx_memory_entries_user_id",
+        "idx_memory_entries_conversation_id",
+        "idx_memory_entries_memory_type",
+        "idx_memory_entries_created_at",
+        "idx_memory_entries_updated_at",
+        "idx_memory_entries_last_accessed",
+        "idx_memory_entries_expires_at",
+        "idx_memory_entries_importance",
+        "idx_memory_entries_confidence",
+        "idx_session_contexts_user_id",
+        "idx_session_contexts_conversation_id",
+        "idx_session_contexts_is_active",
+        "idx_session_contexts_last_activity",
+        "idx_user_contexts_last_active",
+        "idx_conversation_contexts_user_id",
+        "idx_conversation_contexts_created_at",
+        "idx_conversation_contexts_updated_at",
+        "idx_memory_categories_parent_id",
+        "idx_memory_categories_name",
+        "idx_memory_tags_name",
     ]

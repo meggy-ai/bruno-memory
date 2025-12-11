@@ -164,7 +164,7 @@ CREATE TRIGGER update_session_contexts_activity
 
 def get_full_schema_sql() -> str:
     """Get the complete PostgreSQL schema SQL.
-    
+
     Returns:
         str: Complete schema SQL
     """
@@ -173,7 +173,7 @@ def get_full_schema_sql() -> str:
 
 def get_drop_schema_sql() -> str:
     """Get SQL to drop all schema objects.
-    
+
     Returns:
         str: SQL to drop schema
     """

@@ -3,8 +3,8 @@
 from bruno_memory.utils.cache import (
     CacheInterface,
     InMemoryCache,
-    RedisCache,
     MultiLevelCache,
+    RedisCache,
 )
 
 __all__ = [

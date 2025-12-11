@@ -6,10 +6,6 @@ with full-text search and ACID compliance.
 """
 
 from .backend import SQLiteMemoryBackend
-from .schema import get_full_schema_sql, SCHEMA_VERSION
+from .schema import SCHEMA_VERSION, get_full_schema_sql
 
-__all__ = [
-    'SQLiteMemoryBackend',
-    'get_full_schema_sql',
-    'SCHEMA_VERSION'
-]
+__all__ = ["SQLiteMemoryBackend", "get_full_schema_sql", "SCHEMA_VERSION"]
