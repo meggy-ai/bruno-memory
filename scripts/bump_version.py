@@ -12,13 +12,23 @@ VersionPart = Literal["major", "minor", "patch"]
 
 
 def get_current_version() -> str:
-    """Get current version from pyproject.toml."""
-    pyproject = Path("pyproject.toml")
-    content = pyproject.read_text()
-    match = re.search(r'^version = "(\d+\.\d+\.\d+)"', content, re.MULTILINE)
-    if not match:
-        raise ValueError("Could not find version in pyproject.toml")
-    return match.group(1)
+    """Get current version from git tags."""
+    try:
+        # Get the latest tag
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        tag = result.stdout.strip()
+        # Remove 'v' prefix if present
+        version = tag[1:] if tag.startswith('v') else tag
+        return version
+    except subprocess.CalledProcessError:
+        # No tags yet, start with 0.1.0
+        print("No existing tags found, starting with 0.1.0")
+        return "0.1.0"
 
 
 def bump_version(current: str, part: VersionPart) -> str:
@@ -36,45 +46,73 @@ def bump_version(current: str, part: VersionPart) -> str:
 
 
 def update_pyproject(new_version: str) -> None:
-    """Update version in pyproject.toml."""
+    """Update version in pyproject.toml (if static version exists)."""
     pyproject = Path("pyproject.toml")
     content = pyproject.read_text()
+    
+    # Check if version is static or dynamic
+    if 'dynamic = ["version"]' in content or "dynamic = ['version']" in content:
+        print(f"✓ Using dynamic versioning from git tags (v{new_version})")
+        return
+    
+    # Update static version
     updated = re.sub(
         r'^version = "\d+\.\d+\.\d+"',
         f'version = "{new_version}"',
         content,
         flags=re.MULTILINE
     )
-    pyproject.write_text(updated)
-    print(f"✓ Updated pyproject.toml to version {new_version}")
+    if updated != content:
+        pyproject.write_text(updated)
+        print(f"✓ Updated pyproject.toml to version {new_version}")
+    else:
+        print(f"✓ Version in pyproject.toml unchanged (using git tags)")
 
 
 def update_init(new_version: str) -> None:
     """Update version in __init__.py."""
     init_file = Path("bruno_memory/__init__.py")
+    if not init_file.exists():
+        print(f"! __init__.py not found, skipping")
+        return
+    
     content = init_file.read_text()
     
-    # Update __version__
-    updated = re.sub(
-        r'^__version__ = "[^"]+"',
-        f'__version__ = "{new_version}"',
-        content,
-        flags=re.MULTILINE
-    )
-    init_file.write_text(updated)
-    print(f"✓ Updated bruno_memory/__init__.py to version {new_version}")
+    # Update __version__ if it exists
+    if '__version__' in content:
+        updated = re.sub(
+            r'^__version__ = "[^"]+"',
+            f'__version__ = "{new_version}"',
+            content,
+            flags=re.MULTILINE
+        )
+        init_file.write_text(updated)
+        print(f"✓ Updated bruno_memory/__init__.py to version {new_version}")
+    else:
+        print(f"✓ No __version__ in __init__.py (using dynamic versioning)")
 
 
 def create_git_tag(version: str, commit: bool = True) -> None:
     """Create git commit and tag for the version bump."""
-    if commit:
-        subprocess.run(["git", "add", "pyproject.toml", "bruno_memory/__init__.py"], check=True)
+    # Check if there are changes to commit
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        capture_output=True,
+        text=True
+    )
+    
+    if commit and result.stdout.strip():
+        # Add changed files
+        subprocess.run(["git", "add", "-u"], check=True)
         subprocess.run(
             ["git", "commit", "-m", f"Bump version to {version}"],
             check=True
         )
         print(f"✓ Created git commit for version {version}")
+    elif commit:
+        print(f"✓ No changes to commit (using git tag for versioning)")
     
+    # Create the tag
     subprocess.run(
         ["git", "tag", "-a", f"v{version}", "-m", f"Release version {version}"],
         check=True
