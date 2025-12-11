@@ -1,14 +1,21 @@
 # Bruno Memory
 
-## Dependencies
-pip install git+https://github.com/meggy-ai/bruno-core.git
-pip install git+https://github.com/meggy-ai/bruno-llm.git
-
 **Memory storage and retrieval system for Bruno AI Platform**
 
+[![CI](https://github.com/meggy-ai/bruno-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/meggy-ai/bruno-memory/actions/workflows/ci.yml)
+[![Lint](https://github.com/meggy-ai/bruno-memory/actions/workflows/lint.yml/badge.svg)](https://github.com/meggy-ai/bruno-memory/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/gh/meggy-ai/bruno-memory/branch/main/graph/badge.svg)](https://codecov.io/gh/meggy-ai/bruno-memory)
 [![PyPI version](https://badge.fury.io/py/bruno-memory.svg)](https://badge.fury.io/py/bruno-memory)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://meggy-ai.github.io/bruno-memory/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+## Dependencies
+```bash
+pip install git+https://github.com/meggy-ai/bruno-core.git
+pip install git+https://github.com/meggy-ai/bruno-llm.git
+```
 
 Bruno Memory provides multiple backend storage options for conversation history, user context, and semantic memory while maintaining a consistent API for AI assistants to interact with. It implements the `MemoryInterface` from [bruno-core](https://github.com/meggy-ai/bruno-core) with full embedding support via [bruno-llm](https://github.com/meggy-ai/bruno-llm).
 
