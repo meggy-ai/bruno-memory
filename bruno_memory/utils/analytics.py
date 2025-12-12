@@ -8,7 +8,10 @@ Uses pandas for efficient data analysis.
 import logging
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 try:
     import pandas as pd
@@ -16,6 +19,7 @@ try:
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
+    pd = None  # type: ignore
 
 from bruno_core.models import MemoryEntry, Message
 
