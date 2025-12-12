@@ -254,7 +254,7 @@ class MemoryAnalytics:
             "turn_distribution": dict(Counter(role_sequences)),
         }
 
-    def analyze_with_pandas(self, messages: list[Message]) -> pd.DataFrame | None:
+    def analyze_with_pandas(self, messages: list[Message]) -> "pd.DataFrame | None":
         """
         Create pandas DataFrame for advanced analysis.
 
