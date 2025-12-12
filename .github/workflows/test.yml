@@ -34,23 +34,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        # Test across supported Python versions
-        # - 3.10: Minimum supported version
-        # - 3.11: Primary development version
-        # - 3.12: Latest stable version
-        python-version: ["3.12"]
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
@@ -72,7 +63,6 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
-      if: matrix.python-version == '3.11'
       with:
         file: ./coverage.xml
         flags: unittests
