@@ -191,8 +191,9 @@ async def chromadb_backend(
     Use: pytest -m chromadb
     """
     pytest.importorskip("chromadb")
-    from bruno_memory.backends.vector.chromadb_backend import ChromaDBMemoryBackend
     from bruno_memory.backends.vector.schema import ChromaDBConfig
+
+    from bruno_memory.backends.vector.chromadb_backend import ChromaDBMemoryBackend
 
     config_dict = docker_services_config["chromadb"]
     config = ChromaDBConfig(**config_dict)
@@ -231,8 +232,9 @@ async def qdrant_backend(docker_services_config) -> AsyncGenerator["QdrantMemory
     Use: pytest -m qdrant
     """
     pytest.importorskip("qdrant_client")
-    from bruno_memory.backends.vector.qdrant_backend import QdrantMemoryBackend
     from bruno_memory.backends.vector.schema import QdrantConfig
+
+    from bruno_memory.backends.vector.qdrant_backend import QdrantMemoryBackend
 
     config_dict = docker_services_config["qdrant"]
     config = QdrantConfig(**config_dict)

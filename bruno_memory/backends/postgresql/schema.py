@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 );
 
 -- Insert initial schema version
-INSERT INTO schema_migrations (version, description) 
+INSERT INTO schema_migrations (version, description)
 VALUES ('1.0.0', 'Initial schema with messages, memories, sessions, and contexts')
 ON CONFLICT (version) DO NOTHING;
 
@@ -137,15 +137,15 @@ END;
 $$ language 'plpgsql';
 
 DROP TRIGGER IF EXISTS update_memory_entries_updated_at ON memory_entries;
-CREATE TRIGGER update_memory_entries_updated_at 
-    BEFORE UPDATE ON memory_entries 
-    FOR EACH ROW 
+CREATE TRIGGER update_memory_entries_updated_at
+    BEFORE UPDATE ON memory_entries
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_conversation_contexts_updated_at ON conversation_contexts;
-CREATE TRIGGER update_conversation_contexts_updated_at 
-    BEFORE UPDATE ON conversation_contexts 
-    FOR EACH ROW 
+CREATE TRIGGER update_conversation_contexts_updated_at
+    BEFORE UPDATE ON conversation_contexts
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update last_activity in sessions
@@ -158,9 +158,9 @@ END;
 $$ language 'plpgsql';
 
 DROP TRIGGER IF EXISTS update_session_contexts_activity ON session_contexts;
-CREATE TRIGGER update_session_contexts_activity 
-    BEFORE UPDATE ON session_contexts 
-    FOR EACH ROW 
+CREATE TRIGGER update_session_contexts_activity
+    BEFORE UPDATE ON session_contexts
+    FOR EACH ROW
     EXECUTE FUNCTION update_session_activity();
 """
 
@@ -204,7 +204,7 @@ BEGIN;
 {forward_sql}
 
 -- Record migration
-INSERT INTO schema_migrations (version, description) 
+INSERT INTO schema_migrations (version, description)
 VALUES ('{version}', '{description}');
 
 COMMIT;

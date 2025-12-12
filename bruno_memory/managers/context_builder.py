@@ -334,7 +334,7 @@ class ContextBuilder:
         token_count = 0
 
         # Start from most recent and work backwards
-        for msg in reversed(sorted(messages, key=lambda m: m.timestamp)):
+        for msg in sorted(messages, key=lambda m: m.timestamp, reverse=True):
             msg_tokens = len(msg.content) // 4
             if token_count + msg_tokens <= token_limit:
                 result.insert(0, msg)

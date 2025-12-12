@@ -401,7 +401,7 @@ class TestPostgreSQLBackend:
             # Create conversation context
             await conn.execute(
                 """
-                INSERT INTO conversation_contexts 
+                INSERT INTO conversation_contexts
                 (conversation_id, user_id, title, message_count)
                 VALUES ($1, $2, $3, 0)
                 """,

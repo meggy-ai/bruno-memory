@@ -198,7 +198,7 @@ class MemoryRetriever:
         """
         cutoff_time = datetime.now() - timedelta(hours=hours)
 
-        query = MemoryQuery(user_id=user_id, memory_types=memory_types, limit=limit)
+        MemoryQuery(user_id=user_id, memory_types=memory_types, limit=limit)
 
         memories = await self.backend.retrieve_memories(user_id, limit=limit)
 

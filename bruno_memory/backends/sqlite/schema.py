@@ -182,7 +182,7 @@ END;
 
 -- Active sessions view
 CREATE VIEW IF NOT EXISTS active_sessions AS
-SELECT 
+SELECT
     sc.*,
     uc.name as user_name
 FROM session_contexts sc
@@ -191,7 +191,7 @@ WHERE sc.is_active = 1;
 
 -- Recent conversations view
 CREATE VIEW IF NOT EXISTS recent_conversations AS
-SELECT 
+SELECT
     cc.*,
     uc.name as user_name,
     COUNT(m.id) as actual_message_count,
@@ -204,7 +204,7 @@ ORDER BY cc.updated_at DESC;
 
 -- Memory statistics view
 CREATE VIEW IF NOT EXISTS memory_stats AS
-SELECT 
+SELECT
     user_id,
     memory_type,
     COUNT(*) as entry_count,
@@ -228,8 +228,8 @@ def get_schema_version_sql() -> str:
         applied_at TEXT NOT NULL DEFAULT (datetime('now')),
         description TEXT
     );
-    
-    INSERT OR REPLACE INTO schema_version (version, description) 
+
+    INSERT OR REPLACE INTO schema_version (version, description)
     VALUES ('{SCHEMA_VERSION}', 'Initial bruno-memory SQLite schema');
     """
 

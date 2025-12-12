@@ -161,7 +161,7 @@ class EmbeddingManager:
                     batch_embeddings.extend(batch_result)
 
                 # Insert embeddings at correct indices and cache
-                for idx, embedding in zip(text_indices, batch_embeddings):
+                for idx, embedding in zip(text_indices, batch_embeddings, strict=False):
                     embeddings[idx] = embedding
 
                     if use_cache:
@@ -297,7 +297,7 @@ class EmbeddingManager:
         if len(vec1) != len(vec2):
             raise ValueError("Vectors must have same dimension")
 
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
         magnitude1 = sum(a * a for a in vec1) ** 0.5
         magnitude2 = sum(b * b for b in vec2) ** 0.5
 

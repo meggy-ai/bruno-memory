@@ -162,7 +162,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
 
                 # Convert row to dict
                 columns = [desc[0] for desc in cursor.description]
-                data = dict(zip(columns, row))
+                data = dict(zip(columns, row, strict=False))
 
                 return self.deserialize_message(data)
 
@@ -209,7 +209,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
             async with self._connection.execute(query, params) as cursor:
                 columns = [desc[0] for desc in cursor.description]
                 async for row in cursor:
-                    data = dict(zip(columns, row))
+                    data = dict(zip(columns, row, strict=False))
                     messages.append(self.deserialize_message(data))
 
             return messages
@@ -266,7 +266,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
                     raise NotFoundError(f"Memory entry {memory_id} not found")
 
                 columns = [desc[0] for desc in cursor.description]
-                data = dict(zip(columns, row))
+                data = dict(zip(columns, row, strict=False))
 
                 # Update last accessed time
                 await self._update_memory_access_time(memory_id)
@@ -323,7 +323,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
             async with self._connection.execute(query_sql, params) as cursor:
                 columns = [desc[0] for desc in cursor.description]
                 async for row in cursor:
-                    data = dict(zip(columns, row))
+                    data = dict(zip(columns, row, strict=False))
                     memories.append(self.deserialize_memory_entry(data))
 
             return memories
@@ -426,7 +426,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
                     raise NotFoundError(f"Session {session_id} not found")
 
                 columns = [desc[0] for desc in cursor.description]
-                data = dict(zip(columns, row))
+                data = dict(zip(columns, row, strict=False))
 
                 return self.deserialize_session_context(data)
 
@@ -480,8 +480,8 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
             # Reset conversation message count
             await self._connection.execute(
                 """
-                UPDATE conversation_contexts 
-                SET message_count = 0, updated_at = ? 
+                UPDATE conversation_contexts
+                SET message_count = 0, updated_at = ?
                 WHERE conversation_id = ?
             """,
                 (datetime.now(timezone.utc).isoformat(), conversation_id),
@@ -498,7 +498,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         """Update message count for a conversation."""
         await self._connection.execute(
             """
-            UPDATE conversation_contexts 
+            UPDATE conversation_contexts
             SET message_count = message_count + 1, updated_at = ?
             WHERE conversation_id = ?
         """,
@@ -509,7 +509,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         """Update last accessed time for a memory entry."""
         await self._connection.execute(
             """
-            UPDATE memory_entries 
+            UPDATE memory_entries
             SET last_accessed = ?
             WHERE id = ?
         """,
@@ -527,7 +527,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
 
                 if row:
                     columns = [desc[0] for desc in cursor.description]
-                    data = dict(zip(columns, row))
+                    data = dict(zip(columns, row, strict=False))
                     return self.deserialize_user_context(data)
                 else:
                     # Create new user context
@@ -571,7 +571,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
 
                 if row:
                     columns = [desc[0] for desc in cursor.description]
-                    return dict(zip(columns, row))
+                    return dict(zip(columns, row, strict=False))
                 else:
                     # Create new conversation context
                     now = datetime.now(timezone.utc).isoformat()
@@ -602,9 +602,9 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         try:
             async with self._connection.execute(
                 """
-                SELECT * FROM session_contexts 
-                WHERE user_id = ? AND conversation_id = ? 
-                ORDER BY last_activity DESC 
+                SELECT * FROM session_contexts
+                WHERE user_id = ? AND conversation_id = ?
+                ORDER BY last_activity DESC
                 LIMIT 1
             """,
                 (user_id, conversation_id),
@@ -613,7 +613,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
 
                 if row:
                     columns = [desc[0] for desc in cursor.description]
-                    data = dict(zip(columns, row))
+                    data = dict(zip(columns, row, strict=False))
                     return self.deserialize_session_context(data)
                 else:
                     # Create new session context
@@ -639,7 +639,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         try:
             await self._connection.execute(
                 """
-                UPDATE session_contexts 
+                UPDATE session_contexts
                 SET is_active = 0, ended_at = ?
                 WHERE session_id = ?
             """,
@@ -699,7 +699,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
             async with self._connection.execute(query_sql, params) as cursor:
                 columns = [desc[0] for desc in cursor.description]
                 async for row in cursor:
-                    data = dict(zip(columns, row))
+                    data = dict(zip(columns, row, strict=False))
                     messages.append(self.deserialize_message(data))
 
             return messages

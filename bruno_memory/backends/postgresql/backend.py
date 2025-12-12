@@ -153,7 +153,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
                     await conn.execute(
                         """
-                        INSERT INTO messages 
+                        INSERT INTO messages
                         (id, role, content, message_type, timestamp, metadata, parent_id, conversation_id)
                         VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)
                         """,
@@ -174,7 +174,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                     # Update conversation context
                     await conn.execute(
                         """
-                        UPDATE conversation_contexts 
+                        UPDATE conversation_contexts
                         SET message_count = message_count + 1, updated_at = NOW()
                         WHERE conversation_id = $1
                         """,
@@ -400,7 +400,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
         try:
             query = """
-                SELECT id, content, memory_type, user_id, conversation_id, 
+                SELECT id, content, memory_type, user_id, conversation_id,
                        metadata, created_at, updated_at, last_accessed,
                        importance, confidence, expires_at
                 FROM memory_entries

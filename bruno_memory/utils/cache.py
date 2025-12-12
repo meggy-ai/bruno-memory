@@ -455,7 +455,7 @@ class RedisCache(CacheInterface):
             values = await self._client.mget(redis_keys)
 
             result = {}
-            for key, value in zip(keys, values):
+            for key, value in zip(keys, values, strict=False):
                 if value is not None:
                     result[key] = json.loads(value)
                     await self._increment_stat("hits")

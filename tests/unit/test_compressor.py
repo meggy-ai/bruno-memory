@@ -186,7 +186,7 @@ class TestMemoryCompressor:
             auto_compress_threshold=10,
         )
 
-        result = await compressor.compress_conversation(conversation_id, force=True)
+        await compressor.compress_conversation(conversation_id, force=True)
 
         # Should compress even below threshold
         assert mock_backend.clear_history.called
