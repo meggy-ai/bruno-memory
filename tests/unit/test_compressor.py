@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
-from bruno_core.models import MemoryEntry, MemoryType, Message, MessageRole
+from bruno_core.models import MemoryEntry, MemoryType, Message, MessageRole, MessageType
 
 from bruno_memory.exceptions import CompressionError
 from bruno_memory.managers.compressor import (
@@ -186,7 +186,7 @@ class TestMemoryCompressor:
             auto_compress_threshold=10,
         )
 
-        await compressor.compress_conversation(conversation_id, force=True)
+        _ = await compressor.compress_conversation(conversation_id, force=True)
 
         # Should compress even below threshold
         assert mock_backend.clear_history.called

@@ -113,15 +113,6 @@ class MemoryBackendFactory:
         except Exception as e:
             logger.warning(f"Backend discovery failed: {e}")
 
-    def unregister_backend(self, name: str) -> None:
-        """Unregister a memory backend implementation.
-
-        Args:
-            name: Backend name to unregister
-        """
-        self._backends.pop(name, None)
-        self._config_types.pop(name, None)
-
     def list_backends(self) -> dict[str, str]:
         """List all registered backend implementations.
 

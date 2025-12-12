@@ -286,8 +286,6 @@ class ConversationManager:
         """
         session = await self.get_session(session_id)
 
-        # Merge metadata
-
         # Update session (would need backend support)
         session.metadata.update(metadata)
 
