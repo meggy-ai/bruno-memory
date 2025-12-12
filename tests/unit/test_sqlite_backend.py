@@ -275,4 +275,4 @@ class TestSQLiteBackend:
         query = MemoryQuery(user_id=user_id, query_text="cats")
         results = await sqlite_backend.search_memories(query)
         assert len(results) == 1
-        assert results[0].id == "mem-1"
+        assert str(results[0].id) == mem_id_1

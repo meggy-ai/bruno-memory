@@ -645,9 +645,9 @@ class RedisMemoryBackend(BaseMemoryBackend):
                 await self._client.expire(session_key, self.config.ttl_default)
 
             return SessionContext(
-                session_id=session_id,
+                session_id=str(session_id),
                 user_id=user_id,
-                conversation_id=conversation_id,
+                conversation_id=str(conversation_id),
                 started_at=now,
                 last_activity=now,
                 is_active=True,
@@ -806,9 +806,20 @@ class RedisMemoryBackend(BaseMemoryBackend):
             limit = max_turns * 2 if max_turns else None  # Estimate 2 messages per turn
             messages = await self.retrieve_messages(conversation_id, limit=limit)
 
+            # Import required for ConversationContext
+            from bruno_core.models import SessionContext, UserContext
+
+            # Create required context objects
+            user = UserContext(user_id=conv_metadata["user_id"])
+            session = SessionContext(
+                user_id=conv_metadata["user_id"],
+                conversation_id=conv_metadata["conversation_id"],
+            )
+
             return ConversationContext(
                 conversation_id=conv_metadata["conversation_id"],
-                user_id=conv_metadata["user_id"],
+                user=user,
+                session=session,
                 messages=messages,
                 metadata=conv_metadata.get("metadata", {}),
                 created_at=datetime.fromisoformat(conv_metadata["created_at"]),

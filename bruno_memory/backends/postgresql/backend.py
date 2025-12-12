@@ -85,6 +85,11 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
         except Exception as e:
             raise ConnectionError(f"Failed to initialize PostgreSQL backend: {e}") from e
 
+    async def _ensure_initialized(self) -> None:
+        """Ensure backend is initialized before operations."""
+        if not self._initialized:
+            await self.initialize()
+
     async def connect(self) -> None:
         """Connect to PostgreSQL (alias for initialize)."""
         await self.initialize()
@@ -143,6 +148,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 async with conn.transaction():
                     # Store message
                     message_id = uuid4()
+                    # Convert dict to JSON string for JSONB
                     metadata_json = json.dumps(message.metadata or {})
 
                     await conn.execute(
@@ -233,7 +239,8 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
             messages = []
             for row in rows:
-                metadata = dict(row["metadata"]) if row["metadata"] else {}
+                # Parse JSON if string, otherwise use as-is (handles both JSON and JSONB)
+                metadata = json.loads(row["metadata"]) if isinstance(row["metadata"], str) else (row["metadata"] or {})
                 message = Message(
                     role=MessageRole(row["role"]),
                     content=row["content"],
@@ -292,7 +299,8 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
             messages = []
             for row in rows:
-                metadata = dict(row["metadata"]) if row["metadata"] else {}
+                # Parse JSON if string, otherwise use as-is (handles both JSON and JSONB)
+                metadata = json.loads(row["metadata"]) if isinstance(row["metadata"], str) else (row["metadata"] or {})
                 message = Message(
                     role=MessageRole(row["role"]),
                     content=row["content"],
@@ -331,6 +339,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 importance = metadata.get("importance", 0.0)
                 confidence = metadata.get("confidence", 0.0)
 
+                # Convert dict to JSON string for JSONB
                 metadata_json = json.dumps(metadata)
 
                 await conn.execute(
@@ -352,7 +361,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                     metadata_json,
                     importance,
                     confidence,
-                    metadata.get("expires_at"),
+                    memory.expires_at,
                 )
 
                 return memory_id
@@ -424,7 +433,8 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
             memories = []
             for row in rows:
-                metadata_dict = dict(row["metadata"]) if row["metadata"] else {}
+                # PostgreSQL JSONB is already a dict, copy it since we're modifying
+                metadata_dict = dict(row["metadata"]) if (row["metadata"] and isinstance(row["metadata"], dict)) else {}
                 metadata_dict["importance"] = row["importance"]
                 metadata_dict["confidence"] = row["confidence"]
                 metadata_dict["created_at"] = row["created_at"]
@@ -437,8 +447,9 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                     content=row["content"],
                     memory_type=MemoryType(row["memory_type"]),
                     user_id=row["user_id"],
-                    conversation_id=row["conversation_id"],
+                    conversation_id=str(row["conversation_id"]) if row["conversation_id"] else None,
                     metadata=MemoryMetadata(**metadata_dict),
+                    expires_at=row["expires_at"],
                 )
                 memories.append(memory)
 
@@ -483,7 +494,8 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 params.append(type_values)
                 param_idx += 1
 
-            if query.conversation_id:
+            # conversation_id is not a standard MemoryQuery field, check if it exists
+            if hasattr(query, 'conversation_id') and query.conversation_id:
                 sql += f" AND conversation_id = ${param_idx}"
                 params.append(query.conversation_id)
                 param_idx += 1
@@ -493,7 +505,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 params.append(query.min_importance)
                 param_idx += 1
 
-            if query.time_range:
+            if hasattr(query, 'time_range') and query.time_range:
                 start, end = query.time_range
                 if start:
                     sql += f" AND created_at >= ${param_idx}"
@@ -512,7 +524,8 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
             memories = []
             for row in rows:
-                metadata_dict = dict(row["metadata"]) if row["metadata"] else {}
+                # PostgreSQL JSONB is already a dict, copy it since we're modifying
+                metadata_dict = dict(row["metadata"]) if (row["metadata"] and isinstance(row["metadata"], dict)) else {}
                 metadata_dict["importance"] = row["importance"]
                 metadata_dict["confidence"] = row["confidence"]
                 metadata_dict["created_at"] = row["created_at"]
@@ -525,8 +538,9 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                     content=row["content"],
                     memory_type=MemoryType(row["memory_type"]),
                     user_id=row["user_id"],
-                    conversation_id=row["conversation_id"],
+                    conversation_id=str(row["conversation_id"]) if row["conversation_id"] else None,
                     metadata=MemoryMetadata(**metadata_dict),
+                    expires_at=row["expires_at"],
                 )
                 memories.append(memory)
 
@@ -591,6 +605,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
             async with self._pool.acquire() as conn:
                 session_id = uuid4()
                 now = datetime.now()
+                # Convert dict to JSON string for JSONB
                 state_json = json.dumps(initial_state or {})
 
                 await conn.execute(
@@ -606,9 +621,9 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 )
 
                 return SessionContext(
-                    session_id=session_id,
+                    session_id=str(session_id),
                     user_id=user_id,
-                    conversation_id=conversation_id,
+                    conversation_id=str(conversation_id),
                     started_at=now,
                     last_activity=now,
                     is_active=True,
@@ -647,16 +662,20 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
             if not row:
                 return None
 
+            # Parse JSON if string, otherwise use as-is
+            state = json.loads(row["state"]) if isinstance(row["state"], str) else (row["state"] or {})
+            metadata = json.loads(row["metadata"]) if isinstance(row["metadata"], str) else (row["metadata"] or {})
+            
             return SessionContext(
-                session_id=row["session_id"],
+                session_id=str(row["session_id"]),
                 user_id=row["user_id"],
-                conversation_id=row["conversation_id"],
+                conversation_id=str(row["conversation_id"]) if row["conversation_id"] else None,
                 started_at=row["started_at"],
                 ended_at=row["ended_at"],
                 last_activity=row["last_activity"],
                 is_active=row["is_active"],
-                state=dict(row["state"]) if row["state"] else {},
-                metadata=dict(row["metadata"]) if row["metadata"] else {},
+                state=state,
+                metadata=metadata,
             )
 
         except Exception as e:
@@ -680,11 +699,12 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
 
         try:
             async with self._pool.acquire() as conn:
+                # Convert dict to JSON string for JSONB
                 state_json = json.dumps(state)
                 await conn.execute(
                     """
                     UPDATE session_contexts
-                    SET state = $2::jsonb
+                    SET state = $2::jsonb, last_activity = NOW()
                     WHERE session_id = $1
                     """,
                     session_id,
@@ -759,13 +779,25 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                     limit=max_turns * 2 if max_turns else None,  # Estimate 2 messages per turn
                 )
 
-            return ConversationContext(
-                conversation_id=conv_row["conversation_id"],
+            # Parse metadata JSON if string
+            metadata = json.loads(conv_row["metadata"]) if isinstance(conv_row["metadata"], str) else (conv_row["metadata"] or {})
+            
+            # Import required models
+            from bruno_core.models import SessionContext, UserContext
+            
+            # Create required context objects
+            user = UserContext(user_id=conv_row["user_id"])
+            session = SessionContext(
                 user_id=conv_row["user_id"],
+                conversation_id=str(conv_row["conversation_id"]),
+            )
+            
+            return ConversationContext(
+                conversation_id=str(conv_row["conversation_id"]),
+                user=user,
+                session=session,
                 messages=messages,
-                metadata=dict(conv_row["metadata"]) if conv_row["metadata"] else {},
-                created_at=conv_row["created_at"],
-                updated_at=conv_row["updated_at"],
+                metadata=metadata,
             )
 
         except Exception as e:

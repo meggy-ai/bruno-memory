@@ -78,7 +78,7 @@ def sample_memory_entry():
         content="Test memory content",
         memory_type=MemoryType.FACT,
         user_id="test_user",
-        conversation_id=uuid4(),
+        conversation_id=str(uuid4()),
         metadata=MemoryMetadata(
             importance=0.8,
             confidence=0.9,
@@ -103,8 +103,19 @@ class TestPostgreSQLBackend:
         """Test storing and retrieving messages."""
         conversation_id = uuid4()
 
-        # Create conversation context first
+        # Create user context and conversation context first
         async with pg_backend._pool.acquire() as conn:
+            # Create user context
+            await conn.execute(
+                """
+                INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                "test_user",
+                "Test User",
+            )
+            # Create conversation context
             await conn.execute(
                 """
                 INSERT INTO conversation_contexts (conversation_id, user_id, message_count)
@@ -128,8 +139,19 @@ class TestPostgreSQLBackend:
         """Test retrieving messages with time filters."""
         conversation_id = uuid4()
 
-        # Create conversation context
+        # Create user context and conversation context
         async with pg_backend._pool.acquire() as conn:
+            # Create user context
+            await conn.execute(
+                """
+                INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                "test_user",
+                "Test User",
+            )
+            # Create conversation context
             await conn.execute(
                 """
                 INSERT INTO conversation_contexts (conversation_id, user_id, message_count)
@@ -177,8 +199,19 @@ class TestPostgreSQLBackend:
         """Test full-text search on messages."""
         conversation_id = uuid4()
 
-        # Create conversation context
+        # Create user context and conversation context
         async with pg_backend._pool.acquire() as conn:
+            # Create user context
+            await conn.execute(
+                """
+                INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                "test_user",
+                "Test User",
+            )
+            # Create conversation context
             await conn.execute(
                 """
                 INSERT INTO conversation_contexts (conversation_id, user_id, message_count)
@@ -227,7 +260,8 @@ class TestPostgreSQLBackend:
         assert len(memories) == 1
         assert memories[0].content == sample_memory_entry.content
         assert memories[0].memory_type == sample_memory_entry.memory_type
-        assert memories[0].metadata.importance == sample_memory_entry.metadata.importance
+        # Use approximate comparison for float precision (PostgreSQL REAL type)
+        assert abs(memories[0].metadata.importance - sample_memory_entry.metadata.importance) < 0.01
 
     async def test_retrieve_memories_with_filters(self, pg_backend):
         """Test retrieving memories with filters."""
@@ -259,7 +293,8 @@ class TestPostgreSQLBackend:
         # Filter by limit
         limited = await pg_backend.retrieve_memories(user_id, limit=1)
         assert len(limited) == 1
-        assert limited[0].metadata.importance == 0.9  # Should return highest importance
+        # Use approximate comparison for float precision (PostgreSQL REAL type)
+        assert abs(limited[0].metadata.importance - 0.9) < 0.01  # Should return highest importance
 
     async def test_search_memories(self, pg_backend):
         """Test searching memories."""
@@ -351,8 +386,19 @@ class TestPostgreSQLBackend:
         conversation_id = uuid4()
         user_id = "test_user"
 
-        # Create conversation context
+        # Create user context and conversation context
         async with pg_backend._pool.acquire() as conn:
+            # Create user context
+            await conn.execute(
+                """
+                INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                user_id,
+                "Test User",
+            )
+            # Create conversation context
             await conn.execute(
                 """
                 INSERT INTO conversation_contexts 
@@ -370,16 +416,28 @@ class TestPostgreSQLBackend:
 
         # Get context
         context = await pg_backend.get_context(conversation_id)
-        assert context.conversation_id == conversation_id
-        assert context.user_id == user_id
+        # ConversationContext returns string conversation_id and user object
+        assert context.conversation_id == str(conversation_id)
+        assert context.user.user_id == user_id
         assert len(context.messages) == 2
 
     async def test_clear_history(self, pg_backend, sample_message):
         """Test clearing message history."""
         conversation_id = uuid4()
 
-        # Create conversation context
+        # Create user context and conversation context
         async with pg_backend._pool.acquire() as conn:
+            # Create user context
+            await conn.execute(
+                """
+                INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                "test_user",
+                "Test User",
+            )
+            # Create conversation context
             await conn.execute(
                 """
                 INSERT INTO conversation_contexts (conversation_id, user_id, message_count)
@@ -406,8 +464,19 @@ class TestPostgreSQLBackend:
         """Test statistics retrieval."""
         conversation_id = uuid4()
 
-        # Create conversation context
+        # Create user context and conversation context
         async with pg_backend._pool.acquire() as conn:
+            # Create user context first
+            await conn.execute(
+                """
+                INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                "test_user",
+                "Test User",
+            )
+            # Create conversation context
             await conn.execute(
                 """
                 INSERT INTO conversation_contexts (conversation_id, user_id, message_count)
@@ -439,14 +508,26 @@ class TestPostgreSQLBackend:
         # Create multiple concurrent operations
         async def concurrent_operation():
             conversation_id = uuid4()
+            user_id = f"user_{uuid4().hex[:8]}"
             async with pg_backend._pool.acquire() as conn:
+                # Create user context first
+                await conn.execute(
+                    """
+                    INSERT INTO user_contexts (user_id, name, preferences, profile, metadata, created_at, last_active)
+                    VALUES ($1, $2, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, NOW(), NOW())
+                    ON CONFLICT (user_id) DO NOTHING
+                    """,
+                    user_id,
+                    f"User {user_id}",
+                )
+                # Create conversation context
                 await conn.execute(
                     """
                     INSERT INTO conversation_contexts (conversation_id, user_id, message_count)
                     VALUES ($1, $2, 0)
                     """,
                     conversation_id,
-                    f"user_{uuid4().hex[:8]}",
+                    user_id,
                 )
 
         # Run concurrent operations
@@ -458,17 +539,19 @@ class TestPostgreSQLBackend:
 
     async def test_memory_expiration(self, pg_backend):
         """Test memory expiration handling."""
+        from datetime import timezone
         user_id = "test_user"
 
-        # Store memory with expiration
+        # Store memory with expiration (use timezone-aware datetimes for PostgreSQL)
+        now = datetime.now(timezone.utc)
         expired_memory = MemoryEntry(
             content="Expired memory",
             memory_type=MemoryType.FACT,
             user_id=user_id,
             metadata=MemoryMetadata(
                 importance=0.8,
-                expires_at=datetime.now() - timedelta(hours=1),  # Already expired
             ),
+            expires_at=now - timedelta(hours=1),  # Already expired
         )
 
         active_memory = MemoryEntry(
@@ -477,8 +560,8 @@ class TestPostgreSQLBackend:
             user_id=user_id,
             metadata=MemoryMetadata(
                 importance=0.9,
-                expires_at=datetime.now() + timedelta(hours=1),  # Still valid
             ),
+            expires_at=now + timedelta(hours=1),  # Still valid
         )
 
         await pg_backend.store_memory(expired_memory)

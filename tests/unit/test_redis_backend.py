@@ -331,7 +331,8 @@ class TestRedisBackend:
 
         # Get context
         context = await redis_backend.get_context(conversation_id)
-        assert context.conversation_id == conversation_id
+        # Redis backend returns string conversation_id
+        assert context.conversation_id == str(conversation_id)
         assert len(context.messages) == 2
 
     async def test_clear_history(self, redis_backend, sample_message):
