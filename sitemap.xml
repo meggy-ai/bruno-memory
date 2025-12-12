@@ -2,42 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
+    </url>
+    <url>
+         <loc>https://github.com/meggy-ai/bruno-memory/TESTING/</loc>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/about/changelog/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/about/license/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/api/factory/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/api/utils/cache/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/development/contributing/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/getting-started/quickstart/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/guide/backends/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/how-to/CI_CD_GUIDE/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
     <url>
          <loc>https://github.com/meggy-ai/bruno-memory/how-to/HOW_TO_RELEASE/</loc>
-         <lastmod>2025-12-11</lastmod>
+         <lastmod>2025-12-12</lastmod>
     </url>
 </urlset>
