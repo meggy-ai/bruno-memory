@@ -79,6 +79,8 @@ class PostgreSQLConfig(MemoryConfig):
     ssl_mode: str = Field(default="prefer", description="SSL mode")
     pool_min_size: int = Field(default=1, description="Minimum pool size")
     pool_max_size: int = Field(default=20, description="Maximum pool size")
+    command_timeout: int = Field(default=60, description="Command timeout in seconds")
+    server_settings: dict[str, str] | None = Field(default=None, description="PostgreSQL server settings")
 
     @field_validator("port")
     @classmethod

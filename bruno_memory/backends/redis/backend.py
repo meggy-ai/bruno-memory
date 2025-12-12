@@ -484,7 +484,7 @@ class RedisMemoryBackend(BaseMemoryBackend):
                         memory_type=MemoryType(memory_data["memory_type"]),
                         user_id=memory_data["user_id"],
                         conversation_id=(
-                            UUID(memory_data["conversation_id"])
+                            memory_data["conversation_id"]
                             if memory_data.get("conversation_id")
                             else None
                         ),
@@ -532,8 +532,8 @@ class RedisMemoryBackend(BaseMemoryBackend):
                 ]
                 results = [m for m in results if m.memory_type.value in type_values]
 
-            # Filter by conversation ID
-            if query.conversation_id:
+            # Filter by conversation ID (if MemoryQuery has it)
+            if hasattr(query, 'conversation_id') and query.conversation_id:
                 results = [m for m in results if m.conversation_id == query.conversation_id]
 
             # Filter by importance
@@ -681,9 +681,9 @@ class RedisMemoryBackend(BaseMemoryBackend):
             session_data = self._deserialize(data)
 
             return SessionContext(
-                session_id=UUID(session_data["session_id"]),
+                session_id=session_data["session_id"],
                 user_id=session_data["user_id"],
-                conversation_id=UUID(session_data["conversation_id"]),
+                conversation_id=session_data["conversation_id"],
                 started_at=datetime.fromisoformat(session_data["started_at"]),
                 ended_at=(
                     datetime.fromisoformat(session_data["ended_at"])
@@ -807,7 +807,7 @@ class RedisMemoryBackend(BaseMemoryBackend):
             messages = await self.retrieve_messages(conversation_id, limit=limit)
 
             return ConversationContext(
-                conversation_id=UUID(conv_metadata["conversation_id"]),
+                conversation_id=conv_metadata["conversation_id"],
                 user_id=conv_metadata["user_id"],
                 messages=messages,
                 metadata=conv_metadata.get("metadata", {}),

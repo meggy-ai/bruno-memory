@@ -219,8 +219,9 @@ class TestMemoryCompressor:
             importance_threshold=0.8,
         )
 
-        assert count == 3
-        assert mock_backend.store_memory.call_count == 3
+        # Messages 0(0.9), 5(0.9), 6(0.8), 7(0.85), 8(0.9), 9(0.95) = 6 messages >= 0.8
+        assert count == 6
+        assert mock_backend.store_memory.call_count == 6
 
     async def test_get_compression_stats(self, mock_backend, sample_messages):
         """Test getting compression statistics."""

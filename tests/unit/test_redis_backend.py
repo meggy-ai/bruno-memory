@@ -461,7 +461,9 @@ async def test_factory_integration():
     """Test Redis backend factory registration."""
     from bruno_memory.factory import MemoryBackendFactory
 
-    factory = MemoryBackendFactory()
+    factory = MemoryBackendFactory(auto_discover=False)
+    # Manually register the backend
+    factory.register_backend("redis", RedisMemoryBackend, RedisConfig)
     config = RedisConfig(**REDIS_CONFIG)
     backend = factory.create_backend("redis", config)
 

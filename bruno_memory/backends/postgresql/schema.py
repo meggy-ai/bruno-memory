@@ -136,11 +136,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_memory_entries_updated_at ON memory_entries;
 CREATE TRIGGER update_memory_entries_updated_at 
     BEFORE UPDATE ON memory_entries 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_conversation_contexts_updated_at ON conversation_contexts;
 CREATE TRIGGER update_conversation_contexts_updated_at 
     BEFORE UPDATE ON conversation_contexts 
     FOR EACH ROW 
@@ -155,6 +157,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_session_contexts_activity ON session_contexts;
 CREATE TRIGGER update_session_contexts_activity 
     BEFORE UPDATE ON session_contexts 
     FOR EACH ROW 

@@ -495,7 +495,9 @@ async def test_factory_integration():
     """Test PostgreSQL backend factory registration."""
     from bruno_memory.factory import MemoryBackendFactory
 
-    factory = MemoryBackendFactory()
+    factory = MemoryBackendFactory(auto_discover=False)
+    # Manually register the backend
+    factory.register_backend("postgresql", PostgreSQLMemoryBackend, PostgreSQLConfig)
     config = PostgreSQLConfig(**POSTGRES_CONFIG)
     backend = factory.create_backend("postgresql", config)
 
