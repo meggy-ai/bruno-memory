@@ -242,7 +242,10 @@ class ChromaDBBackend(BaseMemoryBackend):
             matches = []
             if results and results["documents"] and results["documents"][0]:
                 for doc, meta, distance in zip(
-                    results["documents"][0], results["metadatas"][0], results["distances"][0], strict=False
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0],
+                    strict=False,
                 ):
                     # Convert distance to similarity score (0-1)
                     # For cosine distance: similarity = 1 - distance
@@ -376,7 +379,10 @@ class ChromaDBBackend(BaseMemoryBackend):
             matches = []
             if results and results["documents"] and results["documents"][0]:
                 for doc, meta, distance in zip(
-                    results["documents"][0], results["metadatas"][0], results["distances"][0], strict=False
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0],
+                    strict=False,
                 ):
                     # Filter by importance
                     if meta.get("importance", 0.0) < min_importance:
