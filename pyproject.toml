@@ -40,6 +40,20 @@ dependencies = [
     "pydantic>=2.5.0",
     "python-dateutil>=2.8.2",
     "typing-extensions>=4.8.0",
+    # Backend dependencies
+    "aiosqlite>=0.19.0",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.9",
+    "redis[hiredis]>=5.0.0",
+    # Vector databases
+    "chromadb>=0.4.18",
+    "qdrant-client>=1.7.0",
+    # Advanced features
+    "cryptography>=41.0.0",
+    "numpy>=1.24.0",
+    # Embeddings
+    "sentence-transformers>=2.2.2",
+    "torch>=2.1.0",
 ]
 dynamic = ["version"]
 
@@ -50,45 +64,6 @@ Repository = "https://github.com/meggy-ai/bruno-memory.git"
 Issues = "https://github.com/meggy-ai/bruno-memory/issues"
 
 [project.optional-dependencies]
-# Advanced features
-advanced = [
-    "cryptography>=41.0.0",
-    "numpy>=1.24.0",
-]
-
-# SQLite backend (uses built-in sqlite3 + aiosqlite for async)
-sqlite = [
-    "aiosqlite>=0.19.0",
-]
-
-# PostgreSQL backend with vector extensions
-postgresql = [
-    "asyncpg>=0.29.0",
-    "psycopg2-binary>=2.9.9",  # For pgvector support
-]
-
-# Redis backend for caching and session management
-redis = [
-    "redis[hiredis]>=5.0.0",
-]
-
-# Vector database backends for semantic search
-vector = [
-    "chromadb>=0.4.18",
-    "qdrant-client>=1.7.0",
-]
-
-# Local embedding support (alternative to API-based embeddings)
-embeddings = [
-    "sentence-transformers>=2.2.2",
-    "torch>=2.1.0",
-]
-
-# Full installation with all backends
-all = [
-    "bruno-memory[advanced,sqlite,postgresql,redis,vector,embeddings]",
-]
-
 # Development dependencies
 dev = [
     "pytest>=7.4.3",
