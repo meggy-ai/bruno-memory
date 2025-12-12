@@ -181,7 +181,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         """Retrieve messages with optional filtering."""
         if not self._connection:
             raise StorageError("Backend not connected")
-        
+
         try:
             query_parts = ["SELECT * FROM messages"]
             params = []
@@ -674,7 +674,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         """Search messages by text content."""
         if not self._connection:
             raise StorageError("Backend not connected")
-        
+
         try:
             query_parts = ["SELECT * FROM messages"]
             params = []
@@ -709,7 +709,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
 
     async def get_statistics(self, user_id: str | None = None) -> dict[str, Any]:
         """Get database statistics.
-        
+
         Args:
             user_id: Optional user ID to filter statistics (currently unused)
         """

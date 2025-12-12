@@ -533,7 +533,7 @@ class RedisMemoryBackend(BaseMemoryBackend):
                 results = [m for m in results if m.memory_type.value in type_values]
 
             # Filter by conversation ID (if MemoryQuery has it)
-            if hasattr(query, 'conversation_id') and query.conversation_id:
+            if hasattr(query, "conversation_id") and query.conversation_id:
                 results = [m for m in results if m.conversation_id == query.conversation_id]
 
             # Filter by importance

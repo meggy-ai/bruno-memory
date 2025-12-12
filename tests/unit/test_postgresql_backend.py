@@ -540,6 +540,7 @@ class TestPostgreSQLBackend:
     async def test_memory_expiration(self, pg_backend):
         """Test memory expiration handling."""
         from datetime import timezone
+
         user_id = "test_user"
 
         # Store memory with expiration (use timezone-aware datetimes for PostgreSQL)

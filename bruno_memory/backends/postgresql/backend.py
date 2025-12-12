@@ -240,7 +240,11 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
             messages = []
             for row in rows:
                 # Parse JSON if string, otherwise use as-is (handles both JSON and JSONB)
-                metadata = json.loads(row["metadata"]) if isinstance(row["metadata"], str) else (row["metadata"] or {})
+                metadata = (
+                    json.loads(row["metadata"])
+                    if isinstance(row["metadata"], str)
+                    else (row["metadata"] or {})
+                )
                 message = Message(
                     role=MessageRole(row["role"]),
                     content=row["content"],
@@ -300,7 +304,11 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
             messages = []
             for row in rows:
                 # Parse JSON if string, otherwise use as-is (handles both JSON and JSONB)
-                metadata = json.loads(row["metadata"]) if isinstance(row["metadata"], str) else (row["metadata"] or {})
+                metadata = (
+                    json.loads(row["metadata"])
+                    if isinstance(row["metadata"], str)
+                    else (row["metadata"] or {})
+                )
                 message = Message(
                     role=MessageRole(row["role"]),
                     content=row["content"],
@@ -434,7 +442,11 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
             memories = []
             for row in rows:
                 # PostgreSQL JSONB is already a dict, copy it since we're modifying
-                metadata_dict = dict(row["metadata"]) if (row["metadata"] and isinstance(row["metadata"], dict)) else {}
+                metadata_dict = (
+                    dict(row["metadata"])
+                    if (row["metadata"] and isinstance(row["metadata"], dict))
+                    else {}
+                )
                 metadata_dict["importance"] = row["importance"]
                 metadata_dict["confidence"] = row["confidence"]
                 metadata_dict["created_at"] = row["created_at"]
@@ -495,7 +507,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 param_idx += 1
 
             # conversation_id is not a standard MemoryQuery field, check if it exists
-            if hasattr(query, 'conversation_id') and query.conversation_id:
+            if hasattr(query, "conversation_id") and query.conversation_id:
                 sql += f" AND conversation_id = ${param_idx}"
                 params.append(query.conversation_id)
                 param_idx += 1
@@ -505,7 +517,7 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 params.append(query.min_importance)
                 param_idx += 1
 
-            if hasattr(query, 'time_range') and query.time_range:
+            if hasattr(query, "time_range") and query.time_range:
                 start, end = query.time_range
                 if start:
                     sql += f" AND created_at >= ${param_idx}"
@@ -525,7 +537,11 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
             memories = []
             for row in rows:
                 # PostgreSQL JSONB is already a dict, copy it since we're modifying
-                metadata_dict = dict(row["metadata"]) if (row["metadata"] and isinstance(row["metadata"], dict)) else {}
+                metadata_dict = (
+                    dict(row["metadata"])
+                    if (row["metadata"] and isinstance(row["metadata"], dict))
+                    else {}
+                )
                 metadata_dict["importance"] = row["importance"]
                 metadata_dict["confidence"] = row["confidence"]
                 metadata_dict["created_at"] = row["created_at"]
@@ -663,9 +679,15 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 return None
 
             # Parse JSON if string, otherwise use as-is
-            state = json.loads(row["state"]) if isinstance(row["state"], str) else (row["state"] or {})
-            metadata = json.loads(row["metadata"]) if isinstance(row["metadata"], str) else (row["metadata"] or {})
-            
+            state = (
+                json.loads(row["state"]) if isinstance(row["state"], str) else (row["state"] or {})
+            )
+            metadata = (
+                json.loads(row["metadata"])
+                if isinstance(row["metadata"], str)
+                else (row["metadata"] or {})
+            )
+
             return SessionContext(
                 session_id=str(row["session_id"]),
                 user_id=row["user_id"],
@@ -780,18 +802,22 @@ class PostgreSQLMemoryBackend(BaseMemoryBackend):
                 )
 
             # Parse metadata JSON if string
-            metadata = json.loads(conv_row["metadata"]) if isinstance(conv_row["metadata"], str) else (conv_row["metadata"] or {})
-            
+            metadata = (
+                json.loads(conv_row["metadata"])
+                if isinstance(conv_row["metadata"], str)
+                else (conv_row["metadata"] or {})
+            )
+
             # Import required models
             from bruno_core.models import SessionContext, UserContext
-            
+
             # Create required context objects
             user = UserContext(user_id=conv_row["user_id"])
             session = SessionContext(
                 user_id=conv_row["user_id"],
                 conversation_id=str(conv_row["conversation_id"]),
             )
-            
+
             return ConversationContext(
                 conversation_id=str(conv_row["conversation_id"]),
                 user=user,

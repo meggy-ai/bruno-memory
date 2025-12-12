@@ -56,9 +56,7 @@ class BackupExporter:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return self.output_dir / f"{prefix}_{timestamp}.{extension}"
 
-    def export_messages_to_json(
-        self, messages: list[Message], filename: str | None = None
-    ) -> Path:
+    def export_messages_to_json(self, messages: list[Message], filename: str | None = None) -> Path:
         """
         Export messages to JSON format.
 
@@ -98,9 +96,7 @@ class BackupExporter:
         logger.info(f"Exported {len(messages)} messages to: {output_path}")
         return output_path
 
-    def export_messages_to_csv(
-        self, messages: list[Message], filename: str | None = None
-    ) -> Path:
+    def export_messages_to_csv(self, messages: list[Message], filename: str | None = None) -> Path:
         """
         Export messages to CSV format using pandas.
 

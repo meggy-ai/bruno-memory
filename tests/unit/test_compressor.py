@@ -96,7 +96,9 @@ class TestImportanceFilterStrategy:
         assert len(compressed) == 3
         # Should be sorted by importance (highest first)
         importances = [msg.metadata.get("importance", 0) for msg in compressed]
-        assert importances == sorted(importances, reverse=True), f"Expected sorted in descending order, got {importances}"
+        assert importances == sorted(
+            importances, reverse=True
+        ), f"Expected sorted in descending order, got {importances}"
 
 
 @pytest.mark.asyncio
@@ -115,7 +117,10 @@ class TestSummarizationStrategy:
         # Should have summary + recent messages
         assert len(compressed) == 4  # 1 summary + 3 recent
         assert compressed[0].role == MessageRole.SYSTEM
-        assert "summary" in compressed[0].content.lower() or compressed[0].message_type == MessageType.TEXT
+        assert (
+            "summary" in compressed[0].content.lower()
+            or compressed[0].message_type == MessageType.TEXT
+        )
         assert metadata["compressed"] is True
 
     async def test_no_summarization_below_threshold(self, sample_messages):

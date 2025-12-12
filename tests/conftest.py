@@ -116,7 +116,7 @@ async def postgresql_backend(
     docker_services_config,
 ) -> AsyncGenerator["PostgreSQLMemoryBackend", None]:
     """Create a PostgreSQL backend for testing.
-    
+
     Requires Docker services to be running.
     Use: pytest -m postgresql
     """
@@ -129,7 +129,7 @@ async def postgresql_backend(
     backend = PostgreSQLMemoryBackend(config)
 
     await backend.connect()
-    
+
     # Clean up test data before test
     try:
         await backend._pool.execute("TRUNCATE TABLE messages, memory_entries CASCADE")
@@ -150,7 +150,7 @@ async def postgresql_backend(
 @pytest.fixture
 async def redis_backend(docker_services_config) -> AsyncGenerator["RedisMemoryBackend", None]:
     """Create a Redis backend for testing.
-    
+
     Requires Docker services to be running.
     Use: pytest -m redis
     """
@@ -163,7 +163,7 @@ async def redis_backend(docker_services_config) -> AsyncGenerator["RedisMemoryBa
     backend = RedisMemoryBackend(config)
 
     await backend.connect()
-    
+
     # Clean up test data before test
     try:
         await backend._client.flushdb()
@@ -186,7 +186,7 @@ async def chromadb_backend(
     docker_services_config,
 ) -> AsyncGenerator["ChromaDBMemoryBackend", None]:
     """Create a ChromaDB backend for testing.
-    
+
     Requires Docker services to be running.
     Use: pytest -m chromadb
     """
@@ -199,7 +199,7 @@ async def chromadb_backend(
     backend = ChromaDBMemoryBackend(config)
 
     await backend.connect()
-    
+
     # Clean up test collections before test
     try:
         collections = await backend._client.list_collections()
@@ -226,7 +226,7 @@ async def chromadb_backend(
 @pytest.fixture
 async def qdrant_backend(docker_services_config) -> AsyncGenerator["QdrantMemoryBackend", None]:
     """Create a Qdrant backend for testing.
-    
+
     Requires Docker services to be running.
     Use: pytest -m qdrant
     """
@@ -239,7 +239,7 @@ async def qdrant_backend(docker_services_config) -> AsyncGenerator["QdrantMemory
     backend = QdrantMemoryBackend(config)
 
     await backend.connect()
-    
+
     # Clean up test collections before test
     try:
         collections = await backend._client.get_collections()
